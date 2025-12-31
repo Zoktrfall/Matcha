@@ -1,0 +1,70 @@
+# =========================
+# .NET / ASP.NET Core
+# =========================
+bin/
+obj/
+[Bb]uild/
+[Dd]ebug*/
+[Rr]elease*/
+x64/
+x86/
+[AnyCPU]/
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# Visual Studio (in case)
+.vs/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# =========================
+# Secrets / local configs
+# =========================
+# Do not commit local environment overrides
+#appsettings.Development.json
+#appsettings.Local.json
+
+# dotnet user-secrets (stored outside repo normally, but keep this just in case)
+secrets.json
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Certificates (if you generate locally)
+*.pfx
+*.pem
+*.key
+*.crt
+
+# =========================
+# Tooling
+# =========================
+# Coverlet / test results
+TestResults/
+coverage*/
+*.coverage
+*.coveragexml
+
+# Publish output
+publish/
+
+# =========================
+# Optional: DB artifacts (only if you ever create them under server/)
+# =========================
+*.mdf
+*.ldf
