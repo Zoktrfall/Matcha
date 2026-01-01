@@ -1,19 +1,16 @@
-import { useEffect, useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/auth/Login.jsx";
+import Register from "./pages/auth/Register.jsx";
+import ForgotPassword from "./pages/auth/ForgotPassword.jsx";
 
 export default function App() {
-    const [status, setStatus] = useState("loading...");
-
-    useEffect(() => {
-        fetch("/api/health")
-            .then((r) => r.json())
-            .then((data) => setStatus(data.status))
-            .catch(() => setStatus("error"));
-    }, []);
-
     return (
-        <div style={{ padding: 16 }}>
-            <h1>Matcha</h1>
-            <p>API health: {status}</p>
-        </div>
+        <Routes>
+            <Route path="/" element={<Navigate to="/register" replace />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="*" element={<div style={{ padding: 24 }}>Not found</div>} />
+        </Routes>
     );
 }
