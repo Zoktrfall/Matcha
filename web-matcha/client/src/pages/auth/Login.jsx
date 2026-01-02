@@ -36,8 +36,6 @@ export default function Login() {
                 username: form.username.trim(),
                 password: form.password,
             });
-
-            alert("Logged in (placeholder). Next: connect to backend.");
         } catch (err) {
             setErrors((prev) => ({ ...prev, form: err.message || "Login failed." }));
         } finally {

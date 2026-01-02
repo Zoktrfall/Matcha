@@ -17,6 +17,7 @@ public static class AuthEndpoints
         app.MapPost("/api/auth/resend-verification", ResendVerification);
         app.MapPost("/api/auth/forgot-password", ForgotPassword);
         app.MapPost("/api/auth/reset-password", ResetPassword);
+        app.MapPost("/api/auth/login", Login);
         return app;
     }
 
@@ -348,4 +349,82 @@ public static class AuthEndpoints
 
         return Results.Ok(new { ok = true });
     }
+    
+    private static async Task<IResult> Login(
+        [FromBody] LoginRequest req,
+        IConfiguration cfg,
+        HttpResponse response)
+    {
+        const string invalidMsg = "Invalid username or password.";
+
+        if (string.IsNullOrWhiteSpace(req.Username) || string.IsNullOrWhiteSpace(req.Password))
+            return Results.Json(new { message = invalidMsg }, statusCode: StatusCodes.Status401Unauthorized);
+
+        var username = req.Username.Trim();
+        await using var conn = Db.Open(cfg);
+
+        Guid userId = Guid.Empty;
+        string? passwordHash = null;
+        bool emailVerified = false;
+
+        await using (var cmd = new SqlCommand(@"
+            SELECT TOP 1 u.Id, u.PasswordHash, u.EmailVerified
+            FROM dbo.Users u
+            JOIN dbo.Profiles p ON p.UserId = u.Id
+            WHERE p.Username = @username;
+        ", conn))
+        {
+            cmd.Parameters.Add("@username", SqlDbType.NVarChar, 50).Value = username;
+
+            await using var r = await cmd.ExecuteReaderAsync();
+            if (await r.ReadAsync())
+            {
+                userId = r.GetGuid(0);
+                passwordHash = r.GetString(1);
+                emailVerified = r.GetBoolean(2);
+            }
+        }
+        
+        const string dummyHash = "$2a$12$C1eJd3b9R8YtXn1yqZfQNO0p9tQHqKq7gQn2x8Gm0x1g7rWm8kH5e";
+        var hashToCheck = passwordHash ?? dummyHash;
+        var okPassword = BCrypt.Net.BCrypt.Verify(req.Password, hashToCheck);
+
+        if (passwordHash is null || !okPassword)
+            return Results.Json(new { message = invalidMsg }, statusCode: StatusCodes.Status401Unauthorized);
+
+        if (!emailVerified)
+            return Results.Json(new { message = "Please verify your email before logging in." },
+                statusCode: StatusCodes.Status403Forbidden);
+        
+        var rawToken = TokenUtil.GenerateToken();
+        var tokenHash = TokenUtil.Sha256(rawToken);
+        var expires = DateTime.UtcNow.AddDays(7);
+
+        await using (var insert = new SqlCommand(@"
+            INSERT INTO dbo.Sessions (UserId, TokenHash, ExpiresAt)
+            VALUES (@uid, @hash, @exp);
+        ", conn))
+        {
+            insert.Parameters.Add("@uid", SqlDbType.UniqueIdentifier).Value = userId;
+            insert.Parameters.Add("@hash", SqlDbType.VarBinary, 32).Value = tokenHash;
+            insert.Parameters.Add("@exp", SqlDbType.DateTime2).Value = expires;
+            await insert.ExecuteNonQueryAsync();
+        }
+
+        response.Cookies.Append(
+            "matcha_session",
+            rawToken,
+            new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = false,
+                SameSite = SameSiteMode.Lax,
+                Expires = expires,
+                Path = "/"
+            }
+        );
+
+        return Results.Ok(new { ok = true });
+    }
+
 }
