@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import AuthLayout from "./AuthLayout.jsx";
-import { apiRegister } from "../../lib/api.js";
+import { apiRegister } from "../../lib/authApis.js";
 import { isValidEmail, validatePassword } from "../../lib/validators.js";
 
 export default function Register() {
     const [form, setForm] = useState({
         firstName: "",
         lastName: "",
+        username: "",
         email: "",
         password: "",
         agree: false,
@@ -16,6 +17,7 @@ export default function Register() {
     const [errors, setErrors] = useState({
         firstName: "",
         lastName: "",
+        username: "",
         email: "",
         password: "",
         agree: "",
@@ -31,8 +33,23 @@ export default function Register() {
     }
 
     function resetForm() {
-        setForm({firstName: "", lastName: "", email: "", password: "", agree: false,});
-        setErrors({firstName: "", lastName: "", email: "", password: "", agree: "", form: "",});
+        setForm({
+            firstName: "",
+            lastName: "",
+            username: "",
+            email: "",
+            password: "",
+            agree: false,
+        });
+        setErrors({
+            firstName: "",
+            lastName: "",
+            username: "",
+            email: "",
+            password: "",
+            agree: "",
+            form: "",
+        });
     }
 
     async function onSubmit(e) {
@@ -41,40 +58,47 @@ export default function Register() {
         const next = {
             firstName: "",
             lastName: "",
+            username: "",
             email: "",
             password: "",
             agree: "",
             form: "",
         };
 
-        if (!form.firstName.trim())
+        if(!form.firstName.trim())
             next.firstName = "First name is required.";
-        if (!form.lastName.trim())
+        if(!form.lastName.trim()) 
             next.lastName = "Last name is required.";
-
-        if (next.firstName || next.lastName) {
+        
+        if(next.firstName || next.lastName) {
             setErrors(next);
             return;
         }
+        
+        const u = form.username.trim();
+        if(!u) 
+            next.username = "Username is required.";
+        else if(u.length < 3) 
+            next.username = "Username must be at least 3 characters.";
 
-        if (!form.email.trim())
+        if(!form.email.trim()) 
             next.email = "Email is required.";
-        else if (!isValidEmail(form.email))
+        else if(!isValidEmail(form.email)) 
             next.email = "Please enter a valid email address.";
 
-        const pwError = validatePassword(form.password);
-        if (pwError)
-            next.password = pwError;
-
-        if (next.email || next.password) {
+        if(next.username || next.email) {
             setErrors(next);
             return;
         }
+        
+        const pwError = validatePassword(form.password);
+        if(pwError) 
+            next.password = pwError;
 
-        if (!form.agree)
+        if(!form.agree) 
             next.agree = "You must agree to the Terms & Conditions.";
-
-        if (next.agree) {
+        
+        if (next.password || next.agree) {
             setErrors(next);
             return;
         }
@@ -84,6 +108,7 @@ export default function Register() {
             setErrors({
                 firstName: "",
                 lastName: "",
+                username: "",
                 email: "",
                 password: "",
                 agree: "",
@@ -137,6 +162,19 @@ export default function Register() {
                         {errors.lastName ? <div className="fieldError">{errors.lastName}</div> : null}
                     </label>
                 </div>
+                
+                <label className="field">
+                    <span className="label">Username</span>
+                    <input
+                        className="input"
+                        type="text"
+                        value={form.username}
+                        onChange={(e) => update("username", e.target.value)}
+                        placeholder="Username"
+                        autoComplete="username"
+                    />
+                    {errors.username ? <div className="fieldError">{errors.username}</div> : null}
+                </label>
 
                 <label className="field">
                     <span className="label">Email</span>
@@ -193,7 +231,7 @@ export default function Register() {
                     <button type="button" className="oauthBtn">GitHub</button>
                 </div>
             </form>
-            
+
             {showVerifyModal ? (
                 <div
                     className="modalOverlay"

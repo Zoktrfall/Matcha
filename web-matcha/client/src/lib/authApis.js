@@ -32,6 +32,7 @@ export async function apiRegister(form) {
         body: JSON.stringify({
             firstName: form.firstName,
             lastName: form.lastName,
+            username: form.username,
             email: form.email,
             password: form.password,
         }),
@@ -49,6 +50,20 @@ export async function apiResendVerification(email) {
     return request("/api/auth/resend-verification", {
         method: "POST",
         body: JSON.stringify({ email }),
+    });
+}
+
+export async function apiForgotPassword(email) {
+    return request("/api/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+    });
+}
+
+export async function apiResetPassword(token, newPassword) {
+    return request("/api/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify({ token, newPassword }),
     });
 }
 

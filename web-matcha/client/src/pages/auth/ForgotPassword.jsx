@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import AuthLayout from "./AuthLayout.jsx";
 import { isValidEmail } from "../../lib/validators.js";
+import {apiForgotPassword} from "../../lib/authApis.js";
 
 export default function ForgotPassword() {
     const [email, setEmail] = useState("");
@@ -28,9 +29,7 @@ export default function ForgotPassword() {
             setLoading(true);
             setErrors({ email: "", form: "" });
 
-            // TODO: replace with real API call later
-            await new Promise((r) => setTimeout(r, 600));
-
+            await apiForgotPassword(email);
             setShowModal(true);
         } catch (err) {
             setErrors((prev) => ({ ...prev, form: err.message || "Something went wrong." }));

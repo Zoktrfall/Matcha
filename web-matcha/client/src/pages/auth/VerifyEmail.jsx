@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import AuthLayout from "./AuthLayout.jsx";
-import { apiVerifyEmail, apiResendVerification } from "../../lib/api.js";
+import { apiVerifyEmail, apiResendVerification } from "../../lib/authApis.js";
 import { isValidEmail } from "../../lib/validators.js";
 
 export default function VerifyEmail() {

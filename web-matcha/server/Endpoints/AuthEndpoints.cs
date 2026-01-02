@@ -15,25 +15,35 @@ public static class AuthEndpoints
         app.MapPost("/api/auth/register", Register);
         app.MapPost("/api/auth/verify-email", VerifyEmail);
         app.MapPost("/api/auth/resend-verification", ResendVerification);
+        app.MapPost("/api/auth/forgot-password", ForgotPassword);
+        app.MapPost("/api/auth/reset-password", ResetPassword);
         return app;
     }
 
     private static async Task<IResult> Register([FromBody] RegisterRequest req, IConfiguration cfg)
     {
-        if(string.IsNullOrWhiteSpace(req.FirstName)) 
+        if(string.IsNullOrWhiteSpace(req.FirstName))
             return Results.BadRequest(new { message = "First name is required." });
-        
+
         if(string.IsNullOrWhiteSpace(req.LastName))
             return Results.BadRequest(new { message = "Last name is required." });
 
+        if(string.IsNullOrWhiteSpace(req.Username))
+            return Results.BadRequest(new { message = "Username is required." });
+
+        var username = req.Username.Trim();
+
+        if(username.Length < 3)
+            return Results.BadRequest(new { message = "Username must be at least 3 characters." });
+
         if(string.IsNullOrWhiteSpace(req.Email))
             return Results.BadRequest(new { message = "Email is required." });
-        
+
         if(!Validators.IsValidEmail(req.Email))
             return Results.BadRequest(new { message = "Invalid email address." });
 
         var pwErr = Validators.ValidatePassword(req.Password);
-        if(pwErr is not null) 
+        if(pwErr is not null)
             return Results.BadRequest(new { message = pwErr });
 
         var email = req.Email.Trim().ToLowerInvariant();
@@ -44,12 +54,20 @@ public static class AuthEndpoints
 
         await using var conn = Db.Open(cfg);
         
-        await using (var check = new SqlCommand("SELECT 1 FROM dbo.Users WHERE Email = @email", conn))
+        await using (var checkEmail = new SqlCommand("SELECT 1 FROM dbo.Users WHERE Email = @email", conn))
         {
-            check.Parameters.Add("@email", SqlDbType.NVarChar, 255).Value = email;
-            var exists = await check.ExecuteScalarAsync();
+            checkEmail.Parameters.Add("@email", SqlDbType.NVarChar, 255).Value = email;
+            var exists = await checkEmail.ExecuteScalarAsync();
             if(exists is not null)
                 return Results.Conflict(new { message = "Email is already registered." });
+        }
+
+        await using (var checkUser = new SqlCommand("SELECT 1 FROM dbo.Profiles WHERE Username = @username", conn))
+        {
+            checkUser.Parameters.Add("@username", SqlDbType.NVarChar, 50).Value = username;
+            var exists = await checkUser.ExecuteScalarAsync();
+            if(exists is not null)
+                return Results.Conflict(new { message = "Username is already taken." });
         }
         
         Guid userId;
@@ -63,15 +81,16 @@ public static class AuthEndpoints
             insertUser.Parameters.Add("@hash", SqlDbType.NVarChar, 255).Value = passwordHash;
 
             userId = (Guid)(await insertUser.ExecuteScalarAsync()
-                ?? throw new Exception("Failed to insert user."));
+                     ?? throw new Exception("Failed to insert user."));
         }
         
         await using (var insertProfile = new SqlCommand(@"
-            INSERT INTO dbo.Profiles (UserId, FirstName, LastName, Bio, Gender, Preference)
-            VALUES (@uid, @first, @last, NULL, NULL, NULL);
+            INSERT INTO dbo.Profiles (UserId, Username, FirstName, LastName, Bio, Gender, Preference)
+            VALUES (@uid, @username, @first, @last, NULL, NULL, NULL);
         ", conn))
         {
             insertProfile.Parameters.Add("@uid", SqlDbType.UniqueIdentifier).Value = userId;
+            insertProfile.Parameters.Add("@username", SqlDbType.NVarChar, 50).Value = username;
             insertProfile.Parameters.Add("@first", SqlDbType.NVarChar, 50).Value = first;
             insertProfile.Parameters.Add("@last", SqlDbType.NVarChar, 50).Value = last;
             await insertProfile.ExecuteNonQueryAsync();
@@ -91,7 +110,7 @@ public static class AuthEndpoints
             insertTok.Parameters.Add("@exp", SqlDbType.DateTime2).Value = expires;
             await insertTok.ExecuteNonQueryAsync();
         }
-        
+
         var publicBase = cfg["App:PublicBaseUrl"] ?? "http://localhost:5173";
         var link = $"{publicBase}/verify-email?token={Uri.EscapeDataString(token)}";
 
@@ -214,5 +233,119 @@ public static class AuthEndpoints
         await Emailer.SendVerificationAsync(cfg, email, link);
 
         return genericOk;
+    }
+    
+    private static async Task<IResult> ForgotPassword([FromBody] ForgotPasswordRequest req, IConfiguration cfg)
+    {
+        var ok = Results.Ok(new { ok = true });
+
+        if (string.IsNullOrWhiteSpace(req.Email)) return ok;
+        var email = req.Email.Trim().ToLowerInvariant();
+        if (!Validators.IsValidEmail(email)) return ok;
+
+        await using var conn = Db.Open(cfg);
+
+        Guid userId;
+            await using (var cmd = new SqlCommand(@"
+            SELECT TOP 1 Id
+            FROM dbo.Users
+            WHERE Email = @email;
+        ", conn))
+        {
+            cmd.Parameters.Add("@email", System.Data.SqlDbType.NVarChar, 255).Value = email;
+            var result = await cmd.ExecuteScalarAsync();
+            if (result is null) return ok;
+            userId = (Guid)result;
+        }
+
+        var token = TokenUtil.GenerateToken();   
+        var tokenHash = TokenUtil.Sha256(token); 
+        var expires = DateTime.UtcNow.AddMinutes(30);
+
+        await using (var insert = new SqlCommand(@"
+            INSERT INTO dbo.PasswordResetTokens (UserId, TokenHash, ExpiresAt)
+            VALUES (@uid, @hash, @exp);
+        ", conn))
+        {
+            insert.Parameters.Add("@uid", System.Data.SqlDbType.UniqueIdentifier).Value = userId;
+            insert.Parameters.Add("@hash", System.Data.SqlDbType.VarBinary, 32).Value = tokenHash;
+            insert.Parameters.Add("@exp", System.Data.SqlDbType.DateTime2).Value = expires;
+            await insert.ExecuteNonQueryAsync();
+        }
+
+        var publicBase = cfg["App:PublicBaseUrl"] ?? "http://localhost:5173";
+        var link = $"{publicBase}/reset-password?token={Uri.EscapeDataString(token)}";
+
+        await Emailer.SendPasswordResetAsync(cfg, email, link);
+        return ok;
+    }
+    
+    private static async Task<IResult> ResetPassword([FromBody] ResetPasswordRequest req, IConfiguration cfg)
+    {
+        if(string.IsNullOrWhiteSpace(req.Token))
+            return Results.BadRequest(new { message = "Invalid token." });
+        
+        var pwErr = Validators.ValidatePassword(req.NewPassword);
+        if (pwErr is not null)
+            return Results.BadRequest(new { message = pwErr });
+
+        var tokenHash = TokenUtil.Sha256(req.Token);
+        await using var conn = Db.Open(cfg);
+
+        Guid userId;
+        
+        await using (var cmd = new SqlCommand(@"
+            SELECT TOP 1 UserId
+            FROM dbo.PasswordResetTokens
+            WHERE TokenHash = @hash
+              AND UsedAt IS NULL
+              AND ExpiresAt > SYSUTCDATETIME();
+        ", conn))
+        {
+            cmd.Parameters.Add("@hash", System.Data.SqlDbType.VarBinary, 32).Value = tokenHash;
+            var result = await cmd.ExecuteScalarAsync();
+            if(result is null)
+                return Results.BadRequest(new { message = "Invalid or expired token." });
+
+            userId = (Guid)result;
+        }
+
+        var newHash = PasswordHasher.Hash(req.NewPassword);
+        
+        await using (var tx = await conn.BeginTransactionAsync())
+        {
+            try
+            {
+                await using (var upd = new SqlCommand(@"
+                    UPDATE dbo.Users
+                    SET PasswordHash = @ph
+                    WHERE Id = @uid;
+                ", conn, (SqlTransaction)tx))
+                {
+                    upd.Parameters.Add("@ph", System.Data.SqlDbType.NVarChar, 255).Value = newHash;
+                    upd.Parameters.Add("@uid", System.Data.SqlDbType.UniqueIdentifier).Value = userId;
+                    await upd.ExecuteNonQueryAsync();
+                }
+
+                await using (var used = new SqlCommand(@"
+                    UPDATE dbo.PasswordResetTokens
+                    SET UsedAt = SYSUTCDATETIME()
+                    WHERE TokenHash = @hash;
+                ", conn, (SqlTransaction)tx))
+                {
+                    used.Parameters.Add("@hash", System.Data.SqlDbType.VarBinary, 32).Value = tokenHash;
+                    await used.ExecuteNonQueryAsync();
+                }
+
+                await tx.CommitAsync();
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
+        }
+
+        return Results.Ok(new { ok = true });
     }
 }

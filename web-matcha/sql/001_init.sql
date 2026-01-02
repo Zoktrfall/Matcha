@@ -14,8 +14,9 @@ CREATE TABLE dbo.Users (
 
 CREATE TABLE dbo.Profiles (
     UserId UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    UserName NVARCHAR(50) NOT NULL,
     FirstName NVARCHAR(50) NOT NULL,
-    LastName NVARCHAR(50) NOT NULL,
+    LastName NVARCHAR(50) NOT NULL,w
     Bio NVARCHAR(500) NULL,
     Gender NVARCHAR(50) NULL,
     Preference NVARCHAR(50) NULL,
@@ -50,3 +51,17 @@ CREATE TABLE dbo.EmailVerificationTokens (
 
 CREATE INDEX IX_EVT_UserId ON dbo.EmailVerificationTokens(UserId);
 CREATE INDEX IX_EVT_ExpiresAt ON dbo.EmailVerificationTokens(ExpiresAt);
+
+CREATE TABLE dbo.PasswordResetTokens (
+    Id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
+    UserId UNIQUEIDENTIFIER NOT NULL,
+    TokenHash VARBINARY(32) NOT NULL,
+    ExpiresAt DATETIME2 NOT NULL,
+    UsedAt DATETIME2 NULL,
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT FK_PasswordResetTokens_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id)
+);
+
+CREATE INDEX IX_PasswordResetTokens_UserId ON dbo.PasswordResetTokens(UserId);
+CREATE INDEX IX_PasswordResetTokens_ExpiresAt ON dbo.PasswordResetTokens(ExpiresAt);
+CREATE INDEX IX_PasswordResetTokens_TokenHash ON dbo.PasswordResetTokens(TokenHash);
