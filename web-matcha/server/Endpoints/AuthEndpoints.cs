@@ -14,6 +14,7 @@ public static class AuthEndpoints
     {
         app.MapPost("/api/auth/register", Register);
         app.MapPost("/api/auth/verify-email", VerifyEmail);
+        app.MapPost("/api/auth/resend-verification", ResendVerification);
         return app;
     }
 
@@ -157,5 +158,61 @@ public static class AuthEndpoints
             tx.Rollback();
             throw;
         }
+    }
+    
+    private static async Task<IResult> ResendVerification([FromBody] ResendVerificationRequest req, IConfiguration cfg)
+    {
+        var genericOk = Results.Ok(new { ok = true });
+
+        if(string.IsNullOrWhiteSpace(req.Email))
+            return genericOk;
+
+        var email = req.Email.Trim().ToLowerInvariant();
+        if(!Validators.IsValidEmail(email))
+            return genericOk;
+
+        await using var conn = Db.Open(cfg);
+        
+        Guid userId;
+        bool alreadyVerified;
+
+        await using (var cmd = new SqlCommand(@"
+            SELECT TOP 1 Id, EmailVerified
+            FROM dbo.Users
+            WHERE Email = @email;
+        ", conn))
+        {
+            cmd.Parameters.Add("@email", System.Data.SqlDbType.NVarChar, 255).Value = email;
+
+            await using var r = await cmd.ExecuteReaderAsync();
+            if (!await r.ReadAsync()) return genericOk;
+
+            userId = r.GetGuid(0);
+            alreadyVerified = r.GetBoolean(1);
+        }
+
+        if(alreadyVerified) 
+            return genericOk;
+        
+        var token = TokenUtil.GenerateToken();
+        var tokenHash = TokenUtil.Sha256(token);
+        var expires = DateTime.UtcNow.AddHours(24);
+
+        await using (var insertTok = new SqlCommand(@"
+            INSERT INTO dbo.EmailVerificationTokens (UserId, TokenHash, ExpiresAt)
+            VALUES (@uid, @hash, @exp);
+        ", conn))
+        {
+            insertTok.Parameters.Add("@uid", System.Data.SqlDbType.UniqueIdentifier).Value = userId;
+            insertTok.Parameters.Add("@hash", System.Data.SqlDbType.VarBinary, 32).Value = tokenHash;
+            insertTok.Parameters.Add("@exp", System.Data.SqlDbType.DateTime2).Value = expires;
+            await insertTok.ExecuteNonQueryAsync();
+        }
+        
+        var publicBase = cfg["App:PublicBaseUrl"] ?? "http://localhost:5173";
+        var link = $"{publicBase}/verify-email?token={Uri.EscapeDataString(token)}";
+        await Emailer.SendVerificationAsync(cfg, email, link);
+
+        return genericOk;
     }
 }

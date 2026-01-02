@@ -38,6 +38,20 @@ export async function apiRegister(form) {
     });
 }
 
+export async function apiVerifyEmail(token) {
+    return request("/api/auth/verify-email", {
+        method: "POST",
+        body: JSON.stringify({ token }),
+    });
+}
+
+export async function apiResendVerification(email) {
+    return request("/api/auth/resend-verification", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+    });
+}
+
 export async function apiLogin(payload) {
     return request("/api/auth/login", {
         method: "POST",
