@@ -1,3 +1,5 @@
+using server.Endpoints;
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
@@ -5,12 +7,13 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:5173")
             .AllowAnyHeader()
-            .AllowAnyMethod();
-        // If you use cookie sessions later, also add: .AllowCredentials()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
 var app = builder.Build();
 app.UseCors("client");
-app.MapGet("/api/health", () => Results.Ok(new { status = "ok" }));
+app.MapHomeEndpoints();
+app.MapAuthEndpoints();
 app.Run();

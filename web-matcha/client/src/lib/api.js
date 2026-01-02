@@ -1,16 +1,46 @@
-// Placeholder API calls.
-// Later we replace these with real fetch() calls to the ASP.NET backend.
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000";
 
-export async function apiRegister(payload) {
-    await sleep(400);
-    return { ok: true };
+async function request(path, options = {}) {
+    const res = await fetch(`${API_BASE}${path}`, {
+        method: options.method ?? "GET",
+        headers: {
+            "Content-Type": "application/json",
+            ...(options.headers ?? {}),
+        },
+        credentials: "include",
+        body: options.body,
+    });
+
+    const text = await res.text();
+    let data = null;
+    try {
+        data = text ? JSON.parse(text) : null;
+    } catch {
+        data = { message: text };
+    }
+
+    if (!res.ok) {
+        throw new Error(data?.message || `Request failed (${res.status})`);
+    }
+
+    return data;
+}
+
+export async function apiRegister(form) {
+    return request("/api/auth/register", {
+        method: "POST",
+        body: JSON.stringify({
+            firstName: form.firstName,
+            lastName: form.lastName,
+            email: form.email,
+            password: form.password,
+        }),
+    });
 }
 
 export async function apiLogin(payload) {
-    await sleep(400);
-    return { ok: true };
-}
-
-function sleep(ms) {
-    return new Promise((r) => setTimeout(r, ms));
+    return request("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify(payload),
+    });
 }

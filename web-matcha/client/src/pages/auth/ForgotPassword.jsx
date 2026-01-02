@@ -7,7 +7,7 @@ export default function ForgotPassword() {
     const [email, setEmail] = useState("");
     const [errors, setErrors] = useState({ email: "", form: "" });
     const [loading, setLoading] = useState(false);
-    const [sent, setSent] = useState(false);
+    const [showModal, setShowModal] = useState(false);
 
     async function onSubmit(e) {
         e.preventDefault();
@@ -27,9 +27,11 @@ export default function ForgotPassword() {
         try {
             setLoading(true);
             setErrors({ email: "", form: "" });
-            
+
+            // TODO: replace with real API call later
             await new Promise((r) => setTimeout(r, 600));
-            setSent(true);
+
+            setShowModal(true);
         } catch (err) {
             setErrors((prev) => ({ ...prev, form: err.message || "Something went wrong." }));
         } finally {
@@ -47,59 +49,72 @@ export default function ForgotPassword() {
             }
         >
             <form className="authForm" onSubmit={onSubmit} noValidate>
-                {!sent ? (
-                    <>
-                        <p className="authSubtitle" style={{ marginTop: 0 }}>
-                            Don't worry, Enter your email and we’ll send you a recovery link.
-                        </p>
+                <p className="authSubtitle" style={{ marginTop: 0 }}>
+                    Don't worry, enter your email and we’ll send you a recovery link.
+                </p>
 
-                        <label className="field">
-                            <span className="label">Email</span>
-                            <input
-                                className="input"
-                                type="email"
-                                value={email}
-                                onChange={(e) => {
-                                    setEmail(e.target.value);
-                                    setErrors((p) => ({ ...p, email: "", form: "" }));
-                                }}
-                                placeholder="Email"
-                                autoComplete="email"
-                            />
-                            {errors.email ? <div className="fieldError">{errors.email}</div> : null}
-                        </label>
+                <label className="field">
+                    <span className="label">Email</span>
+                    <input
+                        className="input"
+                        type="email"
+                        value={email}
+                        onChange={(e) => {
+                            setEmail(e.target.value);
+                            setErrors((p) => ({ ...p, email: "", form: "" }));
+                        }}
+                        placeholder="Email"
+                        autoComplete="email"
+                    />
+                    {errors.email ? <div className="fieldError">{errors.email}</div> : null}
+                </label>
 
-                        {errors.form ? <div className="errorBox">{errors.form}</div> : null}
+                {errors.form ? <div className="errorBox">{errors.form}</div> : null}
 
-                        <button className="primaryBtn" type="submit" disabled={loading}>
-                            {loading ? "Sending…" : "Send recovery link"}
-                        </button>
-                    </>
-                ) : (
-                    <>
-                        <div className="successBox">
-                            If an account exists for <b>{email}</b>, we sent a recovery link, Check your email address.
-                        </div>
-
-                        <button
-                            type="button"
-                            className="primaryBtn"
-                            onClick={() => {
-                                setSent(false);
-                                setEmail("");
-                            }}
-                        >
-                            Send another
-                        </button>
-
-                        <div style={{ marginTop: 12 }}>
-                            <Link to="/login" style={{ color: "rgba(255,255,255,0.85)" }}>
-                                Back to login
-                            </Link>
-                        </div>
-                    </>
-                )}
+                <button className="primaryBtn" type="submit" disabled={loading}>
+                    {loading ? "Sending…" : "Send recovery link"}
+                </button>
             </form>
+            
+            {showModal ? (
+                <div
+                    className="modalOverlay"
+                    role="dialog"
+                    aria-modal="true"
+                    onClick={() => setShowModal(false)}
+                >
+                    <div className="modalCard" onClick={(e) => e.stopPropagation()}>
+                        <div className="modalTitle">Check your email</div>
+
+                        <div className="modalText">
+                            If an account exists for <b>{email}</b>, we sent a recovery link.
+                            Please check your inbox.
+                        </div>
+
+                        <div className="modalActions">
+                            <button
+                                type="button"
+                                className="secondaryBtn"
+                                onClick={() => {
+                                    setShowModal(false);
+                                    setEmail("");
+                                    setErrors({ email: "", form: "" });
+                                }}
+                            >
+                                Send another
+                            </button>
+
+                            <button
+                                type="button"
+                                className="primaryBtn"
+                                onClick={() => setShowModal(false)}
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
         </AuthLayout>
     );
 }

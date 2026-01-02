@@ -1,12 +1,21 @@
 CREATE TABLE dbo.Users (
-    Id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
-    Email NVARCHAR(255) NOT NULL UNIQUE,
+    Id UNIQUEIDENTIFIER NOT NULL
+        CONSTRAINT PK_Users PRIMARY KEY
+        CONSTRAINT DF_Users_Id DEFAULT NEWID(),
+    Email NVARCHAR(255) NOT NULL
+        CONSTRAINT UQ_Users_Email UNIQUE,
     PasswordHash NVARCHAR(255) NOT NULL,
-    CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+    CreatedAt DATETIME2 NOT NULL
+        CONSTRAINT DF_Users_CreatedAt DEFAULT SYSUTCDATETIME(),
+    EmailVerified BIT NOT NULL
+        CONSTRAINT DF_Users_EmailVerified DEFAULT (0),
+    EmailVerifiedAt DATETIME2 NULL
 );
 
 CREATE TABLE dbo.Profiles (
     UserId UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+    FirstName NVARCHAR(50) NOT NULL,
+    LastName NVARCHAR(50) NOT NULL,
     Bio NVARCHAR(500) NULL,
     Gender NVARCHAR(50) NULL,
     Preference NVARCHAR(50) NULL,
@@ -24,3 +33,20 @@ CREATE TABLE dbo.Sessions (
 
 CREATE INDEX IX_Sessions_UserId ON dbo.Sessions(UserId);
 CREATE INDEX IX_Sessions_ExpiresAt ON dbo.Sessions(ExpiresAt);
+
+CREATE TABLE dbo.EmailVerificationTokens (
+    Id UNIQUEIDENTIFIER NOT NULL
+        CONSTRAINT PK_EmailVerificationTokens PRIMARY KEY
+        CONSTRAINT DF_EmailVerificationTokens_Id DEFAULT NEWID(),
+    UserId UNIQUEIDENTIFIER NOT NULL,
+    TokenHash VARBINARY(32) NOT NULL,
+    ExpiresAt DATETIME2 NOT NULL,
+    UsedAt DATETIME2 NULL,
+    CreatedAt DATETIME2 NOT NULL
+    CONSTRAINT DF_EmailVerificationTokens_CreatedAt DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT FK_EVT_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id),
+    CONSTRAINT UQ_EVT_TokenHash UNIQUE (TokenHash)
+);
+
+CREATE INDEX IX_EVT_UserId ON dbo.EmailVerificationTokens(UserId);
+CREATE INDEX IX_EVT_ExpiresAt ON dbo.EmailVerificationTokens(ExpiresAt);

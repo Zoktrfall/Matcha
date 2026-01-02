@@ -314,3 +314,69 @@
         margin: 0 auto;
     }
 }
+
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(6px);
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    z-index: 9999;
+}
+
+.modalCard {
+    width: min(520px, 100%);
+    border-radius: 18px;
+    padding: 18px 18px 16px;
+    background: rgba(20, 22, 30, 0.92);
+    border: 1px solid rgba(255,255,255,0.14);
+    box-shadow: 0 30px 120px rgba(0,0,0,0.55);
+}
+
+.modalTitle {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: rgba(255,255,255,0.92);
+}
+
+.modalText {
+    margin-top: 10px;
+    line-height: 1.45;
+    color: rgba(255,255,255,0.75);
+    font-size: 14px;
+}
+
+.modalActions {
+    margin-top: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.mutedLink {
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+}
+.mutedLink:hover {
+    color: rgba(255,255,255,0.92);
+    text-decoration: underline;
+}
+
+.secondaryBtn {
+    height: 44px;
+    padding: 0 16px;
+    border-radius: 12px;
+    margin-top: 6px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: rgba(255,255,255,0.85);
+    cursor: pointer;
+}
+
+.secondaryBtn:hover {
+    background: rgba(255,255,255,0.09);
+}

@@ -22,12 +22,17 @@ export default function Register() {
         form: "",
     });
 
+    const [showVerifyModal, setShowVerifyModal] = useState(false);
     const [loading, setLoading] = useState(false);
 
     function update(key, value) {
-        setForm((p) => ({...p, [key]: value}));
-        // clear field error as user edits + clear general error
-        setErrors((prev) => ({...prev, [key]: "", form: ""}));
+        setForm((p) => ({ ...p, [key]: value }));
+        setErrors((prev) => ({ ...prev, [key]: "", form: "" }));
+    }
+
+    function resetForm() {
+        setForm({firstName: "", lastName: "", email: "", password: "", agree: false,});
+        setErrors({firstName: "", lastName: "", email: "", password: "", agree: "", form: "",});
     }
 
     async function onSubmit(e) {
@@ -85,10 +90,13 @@ export default function Register() {
                 form: "",
             });
 
-            await apiRegister(form); // placeholder right now
-            alert("Registered (placeholder). Next: connect to backend.");
+            await apiRegister(form);
+            setShowVerifyModal(true);
         } catch (err) {
-            setErrors((prev) => ({...prev, form: err.message || "Registration failed."}));
+            setErrors((prev) => ({
+                ...prev,
+                form: err.message || "Registration failed.",
+            }));
         } finally {
             setLoading(false);
         }
@@ -175,9 +183,9 @@ export default function Register() {
                 </button>
 
                 <div className="dividerRow">
-                    <span className="dividerLine"/>
+                    <span className="dividerLine" />
                     <span className="dividerText">Or register with</span>
-                    <span className="dividerLine"/>
+                    <span className="dividerLine" />
                 </div>
 
                 <div className="oauthRow">
@@ -185,6 +193,42 @@ export default function Register() {
                     <button type="button" className="oauthBtn">GitHub</button>
                 </div>
             </form>
+            
+            {showVerifyModal ? (
+                <div
+                    className="modalOverlay"
+                    role="dialog"
+                    aria-modal="true"
+                    onClick={() => setShowVerifyModal(false)}
+                >
+                    <div className="modalCard" onClick={(e) => e.stopPropagation()}>
+                        <div className="modalTitle">Check your email</div>
+
+                        <div className="modalText">
+                            We sent a verification link to <b>{form.email}</b>.
+                            <br />
+                            Open it to activate your account.
+                        </div>
+
+                        <div className="modalActions">
+                            <Link className="mutedLink" to="/login">
+                                Go to login
+                            </Link>
+
+                            <button
+                                type="button"
+                                className="primaryBtn"
+                                onClick={() => {
+                                    setShowVerifyModal(false);
+                                    resetForm();
+                                }}
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
         </AuthLayout>
     );
 }
