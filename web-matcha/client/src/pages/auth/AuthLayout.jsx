@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import romanImg from "../../assets/Roman.jpg";
 import proudImg from "../../assets/Proud.jpg";
 import daringImg from "../../assets/Daring.jpg";
+import {Link} from "react-router-dom";
 
 const HERO_INDEX_KEY = "authHeroIndex";
 
@@ -100,9 +101,9 @@ export default function AuthLayout({
 
                     <div className="authHeroTop">
                         <div className="authLogo">MATCHA/CODER</div>
-                        <a className="authBackLink" href="#">
+                        <Link className="authBackLink" to="/">
                             Back to website <span aria-hidden="true">→</span>
-                        </a>
+                        </Link>
                     </div>
 
                     <div className="authHeroBottom">
