@@ -5,6 +5,8 @@ import ForgotPassword from "./pages/auth/ForgotPassword.jsx";
 import VerifyEmail from "./pages/auth/VerifyEmail.jsx";
 import Landing from "./pages/Landing/Landing.jsx";
 import ResetPassword from "./pages/auth/ResetPassword.jsx";
+import CompleteProfileModal from "./pages/app/CompleteProfileModal.jsx";
+import AppHome from "./pages/app/AppHome.jsx";
 
 export default function App() {
     return (
@@ -15,6 +17,8 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/app" element={<AppHome />} />
+            <Route path="/completeProfileModal" element={<CompleteProfileModal />} />
             <Route path="*" element={<div style={{ padding: 24 }}>Not found</div>} />
         </Routes>
     );

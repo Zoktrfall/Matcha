@@ -1,9 +1,11 @@
-import { Link } from "react-router-dom";
 import { useState } from "react";
 import AuthLayout from "./AuthLayout.jsx";
 import { apiLogin } from "../../lib/authApis.js";
+import {Link} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
+    const nav = useNavigate();
     const [form, setForm] = useState({ username: "", password: "" });
     const [errors, setErrors] = useState({ username: "", password: "", form: "" });
     const [loading, setLoading] = useState(false);
@@ -36,6 +38,8 @@ export default function Login() {
                 username: form.username.trim(),
                 password: form.password,
             });
+            
+            nav("/app");
         } catch (err) {
             setErrors((prev) => ({ ...prev, form: err.message || "Login failed." }));
         } finally {

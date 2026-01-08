@@ -65,3 +65,30 @@ CREATE TABLE dbo.PasswordResetTokens (
 CREATE INDEX IX_PasswordResetTokens_UserId ON dbo.PasswordResetTokens(UserId);
 CREATE INDEX IX_PasswordResetTokens_ExpiresAt ON dbo.PasswordResetTokens(ExpiresAt);
 CREATE INDEX IX_PasswordResetTokens_TokenHash ON dbo.PasswordResetTokens(TokenHash);
+
+CREATE TABLE dbo.Tags (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Name NVARCHAR(50) NOT NULL,
+    Normalized NVARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE dbo.UserTags (
+    UserId UNIQUEIDENTIFIER NOT NULL,
+    TagId INT NOT NULL,
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT PK_UserTags PRIMARY KEY (UserId, TagId),
+    CONSTRAINT FK_UserTags_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id),
+    CONSTRAINT FK_UserTags_Tags FOREIGN KEY (TagId) REFERENCES dbo.Tags(Id)
+);
+
+CREATE TABLE dbo.UserPhotos (
+    Id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
+    UserId UNIQUEIDENTIFIER NOT NULL,
+    Url NVARCHAR(500) NOT NULL,
+    IsPrimary BIT NOT NULL DEFAULT (0),
+    SortOrder INT NOT NULL DEFAULT (0),
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT FK_UserPhotos_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id)
+);
+
+CREATE INDEX IX_UserPhotos_UserId ON dbo.UserPhotos(UserId);

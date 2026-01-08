@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Antiforgery;
 using server.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,8 +13,23 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddAntiforgery(o =>
+{
+    o.HeaderName = "X-CSRF-TOKEN";
+});
+
 var app = builder.Build();
 app.UseCors("client");
+
+app.UseAntiforgery();
+app.MapGet("/api/csrf", (HttpContext ctx, IAntiforgery af) =>
+{
+    var tokens = af.GetAndStoreTokens(ctx);
+    return Results.Ok(new { token = tokens.RequestToken });
+});
+
 app.MapHomeEndpoints();
+app.MapProfileEndpoints();
 app.MapAuthEndpoints();
+
 app.Run();

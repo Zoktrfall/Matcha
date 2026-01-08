@@ -1,0 +1,239 @@
+.cpOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    z-index: 50;
+}
+
+.cpCard {
+    width: min(820px, 100%);
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(15, 15, 25, 0.94);
+    box-shadow: 0 22px 80px rgba(0, 0, 0, 0.6);
+    padding: 18px;
+    color: white;
+}
+
+.cpHeader {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.cpTitle {
+    font-weight: 800;
+    font-size: 18px;
+}
+
+.cpSub {
+    opacity: 0.75;
+    margin-top: 4px;
+}
+
+.cpStatus {
+    opacity: 0.7;
+    font-size: 12px;
+    text-align: right;
+}
+
+.cpBody {
+    margin-top: 16px;
+}
+
+.cpField {
+    margin-bottom: 12px;
+}
+
+.cpLabel {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 6px;
+    opacity: 0.9;
+}
+
+.cpInput {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+    padding: 10px 12px;
+    outline: none;
+}
+
+.cpInput:focus {
+    border-color: rgba(120, 108, 255, 0.55);
+    box-shadow: 0 0 0 3px rgba(120, 108, 255, 0.16);
+}
+
+.cpTextarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.cpRow {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.cpChips {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.cpChip {
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cpChip:disabled {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+.cpActions {
+    display: flex;
+    margin-top: 12px;
+    gap: 10px;
+}
+
+.cpActions.right {
+    justify-content: flex-end;
+}
+
+.cpActions.between {
+    justify-content: space-between;
+}
+
+.cpBtn {
+    height: 42px;
+    padding: 0 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cpBtn:disabled {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+.cpBtn.primary {
+    border-color: rgba(120, 108, 255, 0.55);
+    background: linear-gradient(180deg, rgba(120, 108, 255, 0.95), rgba(94, 82, 230, 0.92));
+    font-weight: 800;
+}
+
+.cpBtn.primary:hover:not(:disabled) {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+}
+
+.cpBtn.ghost:hover:not(:disabled),
+.cpBtn.small:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.cpBtn.small {
+    height: 38px;
+    padding: 0 12px;
+    border-radius: 12px;
+}
+
+.cpBtn.danger {
+    border-color: rgba(255, 80, 80, 0.25);
+    background: rgba(255, 80, 80, 0.10);
+}
+
+.cpBtn.danger:hover:not(:disabled) {
+    background: rgba(255, 80, 80, 0.16);
+}
+
+.cpMsg {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255, 80, 80, 0.10);
+    border: 1px solid rgba(255, 80, 80, 0.25);
+}
+
+.cpHint {
+    opacity: 0.75;
+    margin-top: 6px;
+}
+
+.cpPhotoGrid {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.cpPhotoCard {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.cpPhotoImg {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+    display: block;
+}
+
+.cpPhotoActions {
+    padding: 8px;
+    display: grid;
+    gap: 8px;
+}
+
+.cpPrimaryBadge {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.cpFile {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+@media (max-width: 720px) {
+    .cpHeader {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .cpStatus {
+        text-align: left;
+    }
+    .cpPhotoGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 420px) {
+    .cpPhotoGrid {
+        grid-template-columns: 1fr;
+    }
+    .cpRow {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
