@@ -20,6 +20,7 @@ builder.Services.AddAntiforgery(o =>
 
 var app = builder.Build();
 app.UseCors("client");
+app.UseStaticFiles();
 
 app.UseAntiforgery();
 app.MapGet("/api/csrf", (HttpContext ctx, IAntiforgery af) =>

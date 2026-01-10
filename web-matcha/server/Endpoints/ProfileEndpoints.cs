@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using server.Data;
 using server.Models;
+using server.Utils;
 
 namespace server.Endpoints;
 
@@ -315,7 +316,11 @@ public static class ProfileEndpoints
         return Results.Ok(new { photos });
     }
 
-    private static async Task<IResult> UploadPhoto(HttpContext ctx, IConfiguration cfg, IFormFile file)
+    private static async Task<IResult> UploadPhoto(
+        HttpContext ctx, 
+        IConfiguration cfg, 
+        IFormFile file, 
+        IWebHostEnvironment env)
     {
         var userId = await AuthSession.RequireUserId(ctx, cfg);
         if(userId is null) 
@@ -345,8 +350,7 @@ public static class ProfileEndpoints
         if(string.IsNullOrWhiteSpace(ext))
             ext = ".jpg";
 
-        var uploadRoot = Path.Combine(AppContext.BaseDirectory, "wwwroot", "uploads", userId.Value.ToString());
-        Directory.CreateDirectory(uploadRoot);
+        var uploadRoot = UserUploadDir.GetUserUploadDir(env, userId.Value);
 
         var photoId = Guid.NewGuid();
         var filename = $"{photoId}{ext}";
@@ -412,7 +416,11 @@ public static class ProfileEndpoints
         return Results.Ok(new { ok = true });
     }
 
-    private static async Task<IResult> DeletePhoto(HttpContext ctx, IConfiguration cfg, Guid photoId)
+    private static async Task<IResult> DeletePhoto(
+        HttpContext ctx, 
+        IConfiguration cfg, 
+        Guid photoId, 
+        IWebHostEnvironment env)
     {
         var userId = await AuthSession.RequireUserId(ctx, cfg);
         if(userId is null) 
@@ -445,8 +453,11 @@ public static class ProfileEndpoints
         
         if (!string.IsNullOrWhiteSpace(url) && url.StartsWith("/uploads/"))
         {
-            var full = Path.Combine(AppContext.BaseDirectory, "wwwroot", url.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-            if (File.Exists(full)) File.Delete(full);
+            var webRoot = env.WebRootPath ?? Path.Combine(env.ContentRootPath, "wwwroot");
+            var full = Path.Combine(webRoot, url.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+            
+            if(File.Exists(full)) 
+                File.Delete(full);
         }
         
         if (wasPrimary)
