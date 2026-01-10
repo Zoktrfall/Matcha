@@ -8,7 +8,6 @@ public static class AuthSession
 {
     public static async Task<Guid?> RequireUserId(HttpContext ctx, IConfiguration cfg)
     {
-        
         var token = ctx.Request.Cookies["matcha_session"];
         if(string.IsNullOrWhiteSpace(token)) 
             return null;

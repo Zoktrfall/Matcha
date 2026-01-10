@@ -57,9 +57,17 @@ export async function apiUploadPhoto(file) {
 }
 
 export async function apiSetPrimaryPhoto(photoId) {
-    return request(`/api/photos/${photoId}/primary`, { method: "PUT" });
+    const csrf = await getCsrfToken();
+    return request(`/api/photos/${photoId}/primary`, {
+        method: "PUT",
+        headers: { "X-CSRF-TOKEN": csrf },
+    });
 }
 
 export async function apiDeletePhoto(photoId) {
-    return request(`/api/photos/${photoId}`, { method: "DELETE" });
+    const csrf = await getCsrfToken();
+    return request(`/api/photos/${photoId}`, {
+        method: "DELETE",
+        headers: { "X-CSRF-TOKEN": csrf },
+    });
 }

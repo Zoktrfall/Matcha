@@ -11,11 +11,14 @@ import {
 
 function normalizeTag(s) {
     const t = (s || "").trim();
-    if (!t) return "";
+    
+    if(!t) 
+        return "";
+    
     return t.startsWith("#") ? t.slice(1).trim() : t;
 }
 
-export default function CompleteProfileModal({ me, onDone }) {
+export default function CompleteProfileModal({ me, onRefresh, onFinish }) {
     const [step, setStep] = useState(1);
 
     const [form, setForm] = useState({
@@ -27,8 +30,7 @@ export default function CompleteProfileModal({ me, onDone }) {
     const [tagInput, setTagInput] = useState("");
     const [busy, setBusy] = useState(false);
     const [msg, setMsg] = useState("");
-
-    // keep local state updated if me changes
+    
     useEffect(() => {
         setForm({
             gender: me?.profile?.gender ?? "",
@@ -57,7 +59,7 @@ export default function CompleteProfileModal({ me, onDone }) {
                 preference: form.preference.trim(),
                 bio: form.bio.trim(),
             });
-            await onDone();
+            await onRefresh();
             setStep(2);
         } catch (e) {
             setMsg(e.message || "Failed to save.");
@@ -69,16 +71,20 @@ export default function CompleteProfileModal({ me, onDone }) {
     async function addTag() {
         setMsg("");
         const t = normalizeTag(tagInput).toLowerCase();
-        if (!t) return;
-        if (t.length < 2 || t.length > 30) {
+        
+        if(!t)
+            return;
+        
+        if(t.length < 2 || t.length > 30) {
             setMsg("Tag must be 2–30 characters.");
             return;
         }
+        
         try {
             setBusy(true);
             await apiAttachTags([t]);
             setTagInput("");
-            await onDone();
+            await onRefresh();
         } catch (e) {
             setMsg(e.message || "Failed to add tag.");
         } finally {
@@ -91,7 +97,7 @@ export default function CompleteProfileModal({ me, onDone }) {
         try {
             setBusy(true);
             await apiDetachTag(tag);
-            await onDone();
+            await onRefresh();
         } catch (e) {
             setMsg(e.message || "Failed to remove tag.");
         } finally {
@@ -101,15 +107,19 @@ export default function CompleteProfileModal({ me, onDone }) {
 
     async function upload(file) {
         setMsg("");
-        if (!file) return;
-        if (photos.length >= 5) {
+        if(!file) 
+            return;
+
+        if(photos.length >= 5) {
             setMsg("You can upload up to 5 photos.");
             return;
         }
+
         try {
             setBusy(true);
             await apiUploadPhoto(file);
-            await onDone();
+            await onRefresh();
+            setMsg("Photo uploaded ✅ You can upload more, or set a primary photo.");
         } catch (e) {
             setMsg(e.message || "Upload failed.");
         } finally {
@@ -117,12 +127,13 @@ export default function CompleteProfileModal({ me, onDone }) {
         }
     }
 
+
     async function setPrimary(photoId) {
         setMsg("");
         try {
             setBusy(true);
             await apiSetPrimaryPhoto(photoId);
-            await onDone();
+            await onRefresh();
         } catch (e) {
             setMsg(e.message || "Failed to set primary.");
         } finally {
@@ -135,7 +146,7 @@ export default function CompleteProfileModal({ me, onDone }) {
         try {
             setBusy(true);
             await apiDeletePhoto(photoId);
-            await onDone();
+            await onRefresh();
         } catch (e) {
             setMsg(e.message || "Failed to delete.");
         } finally {
@@ -152,9 +163,15 @@ export default function CompleteProfileModal({ me, onDone }) {
         setStep(3);
     }
 
+    const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5201";
+    function photoSrc(url) {
+        if (!url) return "";
+        return url.startsWith("http") ? url : `${API_BASE}${url}`;
+    }
+
     async function finish() {
         setMsg("");
-        await onDone();
+        await onFinish();
     }
 
     return (
@@ -169,8 +186,8 @@ export default function CompleteProfileModal({ me, onDone }) {
                     </div>
 
                     <div className="cpStatus">
-                        {basicsOk ? "✅ Basics" : "○ Basics"} • {tagsOk ? "✅ Tags" : "○ Tags"} •{" "}
-                        {photosOk ? "✅ Photos" : "○ Photos"}
+                        {basicsOk ? "✔️ Basics" : "○ Basics"} • {tagsOk ? "✔️ Tags" : "○ Tags"} •{" "}
+                        {photosOk ? "✔️ Photos" : "○ Photos"}
                     </div>
                 </div>
 
@@ -272,23 +289,36 @@ export default function CompleteProfileModal({ me, onDone }) {
                     {step === 3 ? (
                         <>
                             <Field label="Photos (max 5) — choose a profile picture">
+                                <div className="cpInfo">
+                                    You can upload up to <b>5 photos</b>. Pick one as your <b>primary</b> profile picture.
+                                    <br />
+                                    You can add / remove photos later in your Profile settings.
+                                </div>
+
                                 <input
                                     className="cpFile"
                                     type="file"
                                     accept="image/png,image/jpeg,image/webp"
                                     disabled={busy || photos.length >= 5}
-                                    onChange={(e) => upload(e.target.files?.[0])}
+                                    onChange={(e) => {
+                                        const f = e.target.files?.[0];
+                                        e.target.value = "";
+                                        upload(f);
+                                    }}
                                 />
 
-                                <div className="cpHint">{photos.length}/5 uploaded</div>
+                                <div className="cpHint">
+                                    {photos.length}/5 uploaded • {photos.some((p) => p.isPrimary) ? "Primary selected ✅" : "Choose a primary photo"}
+                                </div>
 
                                 <div className="cpPhotoGrid">
                                     {photos.map((p) => (
                                         <div key={p.id} className="cpPhotoCard">
-                                            <img className="cpPhotoImg" src={p.url} alt="" />
+                                            <img className="cpPhotoImg" src={photoSrc(p.url)} alt="" />
+
                                             <div className="cpPhotoActions">
                                                 {p.isPrimary ? (
-                                                    <div className="cpPrimaryBadge">✅ Profile picture</div>
+                                                    <div className="cpPrimaryBadge">✅ Primary</div>
                                                 ) : (
                                                     <button
                                                         className="cpBtn small"
@@ -312,19 +342,24 @@ export default function CompleteProfileModal({ me, onDone }) {
                                         </div>
                                     ))}
                                 </div>
+                                {photos.length === 0 ? (
+                                    <div className="cpHint" style={{ marginTop: 10 }}>
+                                        Upload at least 1 photo to continue.
+                                    </div>
+                                ) : null}
                             </Field>
 
                             <div className="cpActions between">
                                 <button className="cpBtn ghost" onClick={() => setStep(2)} disabled={busy}>
                                     Back
                                 </button>
+                                
                                 <button className="cpBtn primary" onClick={finish} disabled={busy || !photosOk}>
                                     {photosOk ? "Finish" : "Pick a primary photo"}
                                 </button>
                             </div>
                         </>
                     ) : null}
-
                     {msg ? <div className="cpMsg">{msg}</div> : null}
                 </div>
             </div>

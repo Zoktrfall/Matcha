@@ -35,3 +35,15 @@ docker exec -it matcha-sql /opt/mssql-tools18/bin/sqlcmd \
   -S localhost -U sa -P 'YourStrong!Passw1rd' -C \
   -d Matcha -i /tmp/001_init.sql
 ```
+
+## 4) Afterward, run sql/002_seed_data.sql to initialize our database
+Copy the script into the container
+```bash
+docker cp ../sql/002_seed_data.sql matcha-sql:/tmp/002_seed_data.sql
+```
+Execute the script against the Matcha database
+```bash
+docker exec -it matcha-sql /opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U sa -P 'YourStrong!Passw1rd' -C \
+  -d Matcha -i /tmp/002_seed_data.sql
+```
