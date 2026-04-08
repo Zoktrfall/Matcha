@@ -1,28 +1,22 @@
-using server.Data;
-using Microsoft.Data.SqlClient;
-using System.Data;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace server.Endpoints;
 
 public static class AuthSession
 {
-    public static async Task<Guid?> RequireUserId(HttpContext ctx, IConfiguration cfg)
+    public static Task<Guid?> RequireUserId(HttpContext ctx)
     {
-        var token = ctx.Request.Cookies["matcha_session"];
-        if(string.IsNullOrWhiteSpace(token)) 
-            return null;
-        
-        var tokenHash = server.Security.TokenUtil.Sha256(token);
+        if (ctx.User?.Identity?.IsAuthenticated != true)
+            return Task.FromResult<Guid?>(null);
 
-        await using var conn = Db.Open(cfg);
-        await using var cmd = new SqlCommand(@"
-            SELECT TOP 1 UserId
-            FROM dbo.Sessions
-            WHERE TokenHash = @hash AND ExpiresAt > SYSUTCDATETIME();
-        ", conn);
+        var subject =
+            ctx.User.FindFirstValue(JwtRegisteredClaimNames.Sub) ??
+            ctx.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        cmd.Parameters.Add("@hash", SqlDbType.VarBinary, 32).Value = tokenHash;
-        var val = await cmd.ExecuteScalarAsync();
-        return val is null ? null : (Guid)val;
+        if (!Guid.TryParse(subject, out var userId))
+            return Task.FromResult<Guid?>(null);
+
+        return Task.FromResult<Guid?>(userId);
     }
 }

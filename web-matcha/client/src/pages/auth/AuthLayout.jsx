@@ -1,5 +1,7 @@
 import "./AuthLayout.css";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { apiMe } from "../../lib/profileApis.js";
 
 import romanImg from "../../assets/Roman.jpg";
 import proudImg from "../../assets/Proud.jpg";
@@ -17,7 +19,9 @@ export default function AuthLayout({
    defaultHeroIndex = 0,
    autoRotate = true,
    rotateMs = 5000,
+   guestOnly = false,
 }) {
+    const nav = useNavigate();
     const sliderRef = useRef(null);
     const [ready, setReady] = useState(false);
 
@@ -80,6 +84,29 @@ export default function AuthLayout({
 
         return () => clearInterval(id);
     }, [ready, autoRotate, rotateMs, images.length, index]);
+
+    useEffect(() => {
+        if (!guestOnly)
+            return;
+
+        let cancelled = false;
+
+        async function checkAuth() {
+            try {
+                await apiMe();
+                if (!cancelled)
+                    nav("/app", { replace: true });
+            } catch {
+                // Stay on the auth screens when the session is missing or the API is unavailable.
+            }
+        }
+
+        checkAuth();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [guestOnly, nav]);
 
     return (
         <div className="authPage">

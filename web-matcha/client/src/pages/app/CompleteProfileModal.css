@@ -117,6 +117,49 @@
     flex-wrap: wrap;
 }
 
+.cpSuggestBox {
+    margin-top: 10px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.04);
+    overflow: hidden;
+}
+
+.cpSuggestList {
+    display: grid;
+}
+
+.cpSuggestItem {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: transparent;
+    color: white;
+    text-align: left;
+    padding: 11px 12px;
+    cursor: pointer;
+}
+
+.cpSuggestItem:last-child {
+    border-bottom: none;
+}
+
+.cpSuggestItem:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.cpSuggestItem:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.cpSuggestState {
+    padding: 11px 12px;
+    color: rgba(255, 255, 255, 0.74);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
 .cpChip {
     height: 34px;
     padding: 0 10px;

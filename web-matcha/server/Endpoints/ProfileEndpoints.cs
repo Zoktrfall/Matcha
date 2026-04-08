@@ -29,7 +29,7 @@ public static class ProfileEndpoints
     
     private static async Task<IResult> GetMe(HttpContext ctx, IConfiguration cfg)
     {
-        var userId = await AuthSession.RequireUserId(ctx, cfg);
+        var userId = await AuthSession.RequireUserId(ctx);
         if(userId is null) 
             return Results.Unauthorized();
 
@@ -126,7 +126,7 @@ public static class ProfileEndpoints
         [FromBody] UpdateProfileRequest req,
         IConfiguration cfg)
     {
-        var userId = await AuthSession.RequireUserId(ctx, cfg);
+        var userId = await AuthSession.RequireUserId(ctx);
         if(userId is null) 
             return Results.Unauthorized();
 
@@ -175,7 +175,7 @@ public static class ProfileEndpoints
 
     private static async Task<IResult> SearchTags(HttpContext ctx, IConfiguration cfg, [FromQuery] string? q)
     {
-        var userId = await AuthSession.RequireUserId(ctx, cfg);
+        var userId = await AuthSession.RequireUserId(ctx);
         if (userId is null) return Results.Unauthorized();
 
         var term = (q ?? "").Trim().ToLowerInvariant();
@@ -200,7 +200,7 @@ public static class ProfileEndpoints
     
     private static async Task<IResult> AttachTags(HttpContext ctx, [FromBody] AttachTagsRequest req, IConfiguration cfg)
     {
-        var userId = await AuthSession.RequireUserId(ctx, cfg);
+        var userId = await AuthSession.RequireUserId(ctx);
         if(userId is null) 
             return Results.Unauthorized();
 
@@ -259,7 +259,7 @@ public static class ProfileEndpoints
 
     private static async Task<IResult> DetachTag(HttpContext ctx, [FromBody] DetachTagRequest req, IConfiguration cfg)
     {
-        var userId = await AuthSession.RequireUserId(ctx, cfg);
+        var userId = await AuthSession.RequireUserId(ctx);
         if(userId is null)
             return Results.Unauthorized();
 
@@ -285,7 +285,7 @@ public static class ProfileEndpoints
     
     private static async Task<IResult> GetPhotos(HttpContext ctx, IConfiguration cfg)
     {
-        var userId = await AuthSession.RequireUserId(ctx, cfg);
+        var userId = await AuthSession.RequireUserId(ctx);
         if(userId is null) 
             return Results.Unauthorized();
 
@@ -322,7 +322,7 @@ public static class ProfileEndpoints
         IFormFile file, 
         IWebHostEnvironment env)
     {
-        var userId = await AuthSession.RequireUserId(ctx, cfg);
+        var userId = await AuthSession.RequireUserId(ctx);
         if(userId is null) 
             return Results.Unauthorized();
 
@@ -386,7 +386,7 @@ public static class ProfileEndpoints
 
     private static async Task<IResult> SetPrimaryPhoto(HttpContext ctx, IConfiguration cfg, Guid photoId)
     {
-        var userId = await AuthSession.RequireUserId(ctx, cfg);
+        var userId = await AuthSession.RequireUserId(ctx);
         if(userId is null)
             return Results.Unauthorized();
 
@@ -422,7 +422,7 @@ public static class ProfileEndpoints
         Guid photoId, 
         IWebHostEnvironment env)
     {
-        var userId = await AuthSession.RequireUserId(ctx, cfg);
+        var userId = await AuthSession.RequireUserId(ctx);
         if(userId is null) 
             return Results.Unauthorized();
 

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiMe } from "../../lib/profileApis.js";
 import CompleteProfileModal from "./CompleteProfileModal.jsx";
 
 export default function AppHome() {
+    const nav = useNavigate();
     const [me, setMe] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showOnboarding, setShowOnboarding] = useState(false);
@@ -24,6 +26,8 @@ export default function AppHome() {
             try {
                 setLoading(true);
                 await refreshAll();
+            } catch {
+                nav("/login", { replace: true });
             } finally {
                 setLoading(false);
             }

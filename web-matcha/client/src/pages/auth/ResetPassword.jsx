@@ -13,6 +13,8 @@ export default function ResetPassword() {
     const [error, setError] = useState("");
     const [ok, setOk] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     async function onSubmit(e) {
         e.preventDefault();
@@ -58,26 +60,48 @@ export default function ResetPassword() {
                 <form className="authForm" onSubmit={onSubmit} noValidate>
                     <label className="field">
                         <span className="label">New password</span>
-                        <input
-                            className="input"
-                            type="password"
-                            value={pw}
-                            onChange={(e) => setPw(e.target.value)}
-                            placeholder="New password"
-                            autoComplete="new-password"
-                        />
+                        <div className="passwordField">
+                            <input
+                                className="input passwordInput"
+                                type={showPassword ? "text" : "password"}
+                                value={pw}
+                                onChange={(e) => setPw(e.target.value)}
+                                placeholder="New password"
+                                autoComplete="new-password"
+                            />
+                            <button
+                                className="passwordToggle"
+                                type="button"
+                                onClick={() => setShowPassword((value) => !value)}
+                                aria-label={showPassword ? "Hide new password" : "Show new password"}
+                                aria-pressed={showPassword}
+                            >
+                                {showPassword ? "Hide" : "Show"}
+                            </button>
+                        </div>
                     </label>
 
                     <label className="field">
                         <span className="label">Confirm password</span>
-                        <input
-                            className="input"
-                            type="password"
-                            value={pw2}
-                            onChange={(e) => setPw2(e.target.value)}
-                            placeholder="Confirm password"
-                            autoComplete="new-password"
-                        />
+                        <div className="passwordField">
+                            <input
+                                className="input passwordInput"
+                                type={showConfirmPassword ? "text" : "password"}
+                                value={pw2}
+                                onChange={(e) => setPw2(e.target.value)}
+                                placeholder="Confirm password"
+                                autoComplete="new-password"
+                            />
+                            <button
+                                className="passwordToggle"
+                                type="button"
+                                onClick={() => setShowConfirmPassword((value) => !value)}
+                                aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                                aria-pressed={showConfirmPassword}
+                            >
+                                {showConfirmPassword ? "Hide" : "Show"}
+                            </button>
+                        </div>
                     </label>
 
                     {error ? <div className="errorBox">{error}</div> : null}

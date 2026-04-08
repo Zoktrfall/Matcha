@@ -41,6 +41,7 @@ export default function ForgotPassword() {
     return (
         <AuthLayout
             title="Reset your password"
+            guestOnly
             subtitle={
                 <>
                     Remembered it? <Link to="/login">Go back to login</Link>

@@ -12,6 +12,7 @@ public static class AuthEndpoints
 {
     public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
+        app.MapGet("/api/auth/status", async (HttpContext ctx) => await AuthStatus(ctx));
         app.MapPost("/api/auth/register", Register);
         app.MapPost("/api/auth/verify-email", VerifyEmail);
         app.MapPost("/api/auth/resend-verification", ResendVerification);
@@ -19,6 +20,12 @@ public static class AuthEndpoints
         app.MapPost("/api/auth/reset-password", ResetPassword);
         app.MapPost("/api/auth/login", Login);
         return app;
+    }
+
+    private static async Task<IResult> AuthStatus(HttpContext ctx)
+    {
+        var userId = await AuthSession.RequireUserId(ctx);
+        return Results.Ok(new { authenticated = userId is not null });
     }
 
     private static async Task<IResult> Register([FromBody] RegisterRequest req, IConfiguration cfg)
@@ -396,24 +403,17 @@ public static class AuthEndpoints
             return Results.Json(new { message = "Please verify your email before logging in." },
                 statusCode: StatusCodes.Status403Forbidden);
         
-        var rawToken = TokenUtil.GenerateToken();
-        var tokenHash = TokenUtil.Sha256(rawToken);
-        var expires = DateTime.UtcNow.AddDays(7);
-
-        await using (var insert = new SqlCommand(@"
-            INSERT INTO dbo.Sessions (UserId, TokenHash, ExpiresAt)
-            VALUES (@uid, @hash, @exp);
-        ", conn))
-        {
-            insert.Parameters.Add("@uid", SqlDbType.UniqueIdentifier).Value = userId;
-            insert.Parameters.Add("@hash", SqlDbType.VarBinary, 32).Value = tokenHash;
-            insert.Parameters.Add("@exp", SqlDbType.DateTime2).Value = expires;
-            await insert.ExecuteNonQueryAsync();
-        }
+        var jwtKey = cfg["Jwt:Key"] ?? throw new InvalidOperationException("Missing Jwt:Key");
+        var jwtIssuer = cfg["Jwt:Issuer"] ?? throw new InvalidOperationException("Missing Jwt:Issuer");
+        var jwtAudience = cfg["Jwt:Audience"] ?? throw new InvalidOperationException("Missing Jwt:Audience");
+        var jwtDays = int.TryParse(cfg["Jwt:Days"], out var parsedDays) ? parsedDays : 7;
+        var lifetime = TimeSpan.FromDays(jwtDays);
+        var expires = DateTime.UtcNow.Add(lifetime);
+        var jwt = JwtToken.Create(userId, jwtIssuer, jwtAudience, jwtKey, lifetime);
 
         response.Cookies.Append(
-            "matcha_session",
-            rawToken,
+            "matcha_jwt",
+            jwt,
             new CookieOptions
             {
                 HttpOnly = true,

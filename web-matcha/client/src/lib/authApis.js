@@ -1,3 +1,5 @@
+import { resetCsrfToken } from "./csrf.js";
+
 export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000";
 
 export async function request(path, options = {}) {
@@ -68,8 +70,15 @@ export async function apiResetPassword(token, newPassword) {
 }
 
 export async function apiLogin(payload) {
-    return request("/api/auth/login", {
+    const data = await request("/api/auth/login", {
         method: "POST",
         body: JSON.stringify(payload),
     });
+
+    resetCsrfToken();
+    return data;
+}
+
+export async function apiAuthStatus() {
+    return request("/api/auth/status", { method: "GET" });
 }

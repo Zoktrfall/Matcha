@@ -26,6 +26,7 @@ export default function Register() {
 
     const [showVerifyModal, setShowVerifyModal] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     function update(key, value) {
         setForm((p) => ({ ...p, [key]: value }));
@@ -130,6 +131,7 @@ export default function Register() {
     return (
         <AuthLayout
             title="Start your journey!"
+            guestOnly
             subtitle={
                 <>
                     Already have an account? <Link to="/login">Log in</Link>
@@ -191,14 +193,25 @@ export default function Register() {
 
                 <label className="field">
                     <span className="label">Password</span>
-                    <input
-                        className="input"
-                        type="password"
-                        value={form.password}
-                        onChange={(e) => update("password", e.target.value)}
-                        placeholder="Enter your password"
-                        autoComplete="new-password"
-                    />
+                    <div className="passwordField">
+                        <input
+                            className="input passwordInput"
+                            type={showPassword ? "text" : "password"}
+                            value={form.password}
+                            onChange={(e) => update("password", e.target.value)}
+                            placeholder="Enter your password"
+                            autoComplete="new-password"
+                        />
+                        <button
+                            className="passwordToggle"
+                            type="button"
+                            onClick={() => setShowPassword((value) => !value)}
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                            aria-pressed={showPassword}
+                        >
+                            {showPassword ? "Hide" : "Show"}
+                        </button>
+                    </div>
                     {errors.password ? <div className="fieldError">{errors.password}</div> : null}
                 </label>
 

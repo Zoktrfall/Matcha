@@ -1,6 +1,11 @@
 import { API_BASE, request } from "./authApis.js";
 
 let csrfToken = null;
+
+export function resetCsrfToken() {
+    csrfToken = null;
+}
+
 export async function getCsrfToken() {
     if(csrfToken)
         return csrfToken;

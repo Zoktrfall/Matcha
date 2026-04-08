@@ -6,8 +6,10 @@ export async function apiMe() {
 }
 
 export async function apiUpdateProfile(payload) {
+    const csrf = await getCsrfToken();
     return request("/api/profile", {
         method: "PUT",
+        headers: { "X-CSRF-TOKEN": csrf },
         body: JSON.stringify(payload),
     });
 }
@@ -17,15 +19,19 @@ export async function apiSearchTags(q) {
 }
 
 export async function apiAttachTags(tags) {
+    const csrf = await getCsrfToken();
     return request("/api/tags/attach", {
         method: "POST",
+        headers: { "X-CSRF-TOKEN": csrf },
         body: JSON.stringify({ tags }),
     });
 }
 
 export async function apiDetachTag(tag) {
+    const csrf = await getCsrfToken();
     return request("/api/tags/detach", {
         method: "DELETE",
+        headers: { "X-CSRF-TOKEN": csrf },
         body: JSON.stringify({ tag }),
     });
 }

@@ -4,6 +4,7 @@ import {
     apiAttachTags,
     apiDeletePhoto,
     apiDetachTag,
+    apiSearchTags,
     apiSetPrimaryPhoto,
     apiUpdateProfile,
     apiUploadPhoto,
@@ -28,8 +29,12 @@ export default function CompleteProfileModal({ me, onRefresh, onFinish }) {
     });
 
     const [tagInput, setTagInput] = useState("");
+    const [tagSuggestions, setTagSuggestions] = useState([]);
+    const [loadingSuggestions, setLoadingSuggestions] = useState(false);
     const [busy, setBusy] = useState(false);
     const [msg, setMsg] = useState("");
+    const tags = me?.tags ?? [];
+    const photos = me?.photos ?? [];
     
     useEffect(() => {
         setForm({
@@ -39,8 +44,41 @@ export default function CompleteProfileModal({ me, onRefresh, onFinish }) {
         });
     }, [me]);
 
-    const tags = me?.tags ?? [];
-    const photos = me?.photos ?? [];
+    useEffect(() => {
+        const term = normalizeTag(tagInput).toLowerCase();
+
+        if (term.length < 2) {
+            setTagSuggestions([]);
+            setLoadingSuggestions(false);
+            return;
+        }
+
+        let cancelled = false;
+        setLoadingSuggestions(true);
+
+        const timeoutId = window.setTimeout(async () => {
+            try {
+                const data = await apiSearchTags(term);
+                if (cancelled) return;
+
+                const selected = new Set(tags.map((tag) => tag.toLowerCase()));
+                const suggestions = (data?.tags ?? []).filter(
+                    (tag) => !selected.has(String(tag).toLowerCase())
+                );
+
+                setTagSuggestions(suggestions);
+            } catch {
+                if (!cancelled) setTagSuggestions([]);
+            } finally {
+                if (!cancelled) setLoadingSuggestions(false);
+            }
+        }, 180);
+
+        return () => {
+            cancelled = true;
+            window.clearTimeout(timeoutId);
+        };
+    }, [tagInput, tags]);
 
     const basicsOk = form.gender.trim() && form.preference.trim() && form.bio.trim().length >= 10;
     const tagsOk = tags.length >= 1;
@@ -68,9 +106,9 @@ export default function CompleteProfileModal({ me, onRefresh, onFinish }) {
         }
     }
 
-    async function addTag() {
+    async function addTag(rawTag = tagInput) {
         setMsg("");
-        const t = normalizeTag(tagInput).toLowerCase();
+        const t = normalizeTag(rawTag).toLowerCase();
         
         if(!t)
             return;
@@ -82,10 +120,12 @@ export default function CompleteProfileModal({ me, onRefresh, onFinish }) {
         
         try {
             setBusy(true);
-            await apiAttachTags([t]);
             setTagInput("");
+            setTagSuggestions([]);
+            await apiAttachTags([t]);
             await onRefresh();
         } catch (e) {
+            setTagInput(rawTag === tagInput ? t : tagInput);
             setMsg(e.message || "Failed to add tag.");
         } finally {
             setBusy(false);
@@ -245,8 +285,11 @@ export default function CompleteProfileModal({ me, onRefresh, onFinish }) {
                                     <input
                                         className="cpInput"
                                         value={tagInput}
-                                        onChange={(e) => setTagInput(e.target.value)}
-                                        placeholder="Type #geek and press Add"
+                                        onChange={(e) => {
+                                            setTagInput(e.target.value);
+                                            setMsg("");
+                                        }}
+                                        placeholder="Type #travel to see matching tags"
                                         disabled={busy}
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter") {
@@ -255,10 +298,36 @@ export default function CompleteProfileModal({ me, onRefresh, onFinish }) {
                                             }
                                         }}
                                     />
-                                    <button className="cpBtn small" onClick={addTag} disabled={busy}>
-                                        Add
+                                    <button className="cpBtn small" type="button" onClick={() => addTag()} disabled={busy}>
+                                        {busy ? "Adding..." : "Add"}
                                     </button>
                                 </div>
+
+                                {tagInput.trim() ? (
+                                    <div className="cpSuggestBox">
+                                        {loadingSuggestions ? (
+                                            <div className="cpSuggestState">Searching tags…</div>
+                                        ) : tagSuggestions.length > 0 ? (
+                                            <div className="cpSuggestList">
+                                                {tagSuggestions.map((tag) => (
+                                                    <button
+                                                        key={tag}
+                                                        type="button"
+                                                        className="cpSuggestItem"
+                                                        onClick={() => addTag(tag)}
+                                                        disabled={busy}
+                                                    >
+                                                        {tag}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        ) : normalizeTag(tagInput).length >= 2 ? (
+                                            <div className="cpSuggestState">
+                                                No existing tags found. Click <b>Add</b> to create #{normalizeTag(tagInput).toLowerCase()}.
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                ) : null}
 
                                 <div className="cpChips">
                                     {tags.map((t) => (
