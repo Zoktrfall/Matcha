@@ -20,20 +20,9 @@ CREATE TABLE dbo.Profiles (
     Bio NVARCHAR(500) NULL,
     Gender NVARCHAR(50) NULL,
     Preference NVARCHAR(50) NULL,
+    Rating INT NOT NULL DEFAULT (0),
     CONSTRAINT FK_Profiles_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id)
 );
-
-CREATE TABLE dbo.Sessions (
-    Id UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY,
-    UserId UNIQUEIDENTIFIER NOT NULL,
-    TokenHash VARBINARY(32) NOT NULL,
-    ExpiresAt DATETIME2 NOT NULL,
-    CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
-    CONSTRAINT FK_Sessions_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id)
-);
-
-CREATE INDEX IX_Sessions_UserId ON dbo.Sessions(UserId);
-CREATE INDEX IX_Sessions_ExpiresAt ON dbo.Sessions(ExpiresAt);
 
 CREATE TABLE dbo.EmailVerificationTokens (
     Id UNIQUEIDENTIFIER NOT NULL

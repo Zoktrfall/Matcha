@@ -126,18 +126,24 @@
 }
 
 .cpSuggestList {
-    display: grid;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
 }
 
 .cpSuggestItem {
-    width: 100%;
-    border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    background: transparent;
+    width: auto;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-bottom: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
     color: white;
     text-align: left;
-    padding: 11px 12px;
+    padding: 8px 12px;
     cursor: pointer;
+    white-space: nowrap;
+    flex: 0 0 auto;
 }
 
 .cpSuggestItem:last-child {
