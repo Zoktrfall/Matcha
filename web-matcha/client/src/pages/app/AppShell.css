@@ -1,0 +1,251 @@
+.appShellPage {
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+    padding: 28px;
+    background:
+        radial-gradient(1200px 700px at 12% 8%, rgba(108,92,231,0.18), transparent 58%),
+        radial-gradient(860px 620px at 90% 18%, rgba(125,108,255,0.16), transparent 60%),
+        linear-gradient(180deg, #090b12 0%, #0d1018 100%);
+    color: rgba(255,255,255,0.92);
+}
+
+.appShellGlow {
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(90px);
+    pointer-events: none;
+    opacity: 0.4;
+}
+
+.appShellGlowA {
+    width: 260px;
+    height: 260px;
+    top: 48px;
+    left: 40px;
+    background: rgba(120,108,255,0.22);
+}
+
+.appShellGlowB {
+    width: 360px;
+    height: 360px;
+    right: -80px;
+    bottom: 40px;
+    background: rgba(88,196,255,0.14);
+}
+
+.appShellFrame {
+    position: relative;
+    z-index: 1;
+    width: min(1380px, 100%);
+    margin: 0 auto;
+    min-height: calc(100vh - 56px);
+    display: grid;
+    grid-template-columns: 248px minmax(0, 1fr);
+    gap: 22px;
+}
+
+.appSidebar,
+.appMainArea,
+.appShellLoading {
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+    backdrop-filter: blur(18px);
+}
+
+.appSidebar {
+    border-radius: 26px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 22px;
+}
+
+.appSidebarTop {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.appBrandBlock {
+    padding: 14px 16px;
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+.appBrand {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+}
+
+.appBrandText {
+    margin-top: 8px;
+    color: rgba(255,255,255,0.62);
+    font-size: 13px;
+}
+
+.appSidebarNav {
+    display: grid;
+    gap: 10px;
+}
+
+.appNavLink,
+.appLogoutButton,
+.appBottomNavLink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    color: rgba(255,255,255,0.88);
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.appNavLink {
+    justify-content: flex-start;
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 18px;
+    font-weight: 700;
+}
+
+.appNavLink:hover,
+.appLogoutButton:hover,
+.appBottomNavLink:hover {
+    transform: translateY(-1px);
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.14);
+}
+
+.appNavLink.active,
+.appBottomNavLink.active {
+    background: linear-gradient(180deg, rgba(125,108,255,0.28), rgba(108,92,231,0.14));
+    border-color: rgba(125,108,255,0.4);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.appNavIcon {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex: 0 0 auto;
+}
+
+.appLogoutButton {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 18px;
+    font-weight: 700;
+    justify-content: flex-start;
+}
+
+.appMainArea {
+    border-radius: 30px;
+    padding: 24px;
+}
+
+.appBottomNav {
+    display: none;
+}
+
+.appShellLoading {
+    position: relative;
+    z-index: 1;
+    width: min(520px, 100%);
+    margin: 18vh auto 0;
+    padding: 24px;
+    border-radius: 22px;
+    text-align: center;
+    color: rgba(255,255,255,0.82);
+}
+
+@media (max-width: 860px) {
+    .appShellPage {
+        padding: 14px;
+    }
+
+    .appShellFrame {
+        min-height: auto;
+        grid-template-columns: 1fr;
+    }
+
+    .appSidebar {
+        display: none;
+    }
+
+    .appMainArea {
+        padding: 18px;
+        border-radius: 24px;
+        margin-bottom: 82px;
+    }
+
+    .appBottomNav {
+        position: fixed;
+        z-index: 10;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 8px;
+        padding: 10px;
+        border-radius: 22px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(11,14,22,0.9);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 18px 42px rgba(0,0,0,0.42);
+    }
+
+    .appBottomNavLink {
+        min-height: 52px;
+        padding: 0;
+        border-radius: 16px;
+    }
+
+    .appBottomNavLink.logout {
+        border-color: rgba(255,255,255,0.12);
+    }
+}
+
+@media (max-width: 560px) {
+    .appShellPage {
+        padding: 10px;
+    }
+
+    .appShellGlowA {
+        width: 180px;
+        height: 180px;
+        top: 24px;
+        left: 8px;
+    }
+
+    .appShellGlowB {
+        width: 220px;
+        height: 220px;
+        right: -70px;
+        bottom: 20px;
+    }
+
+    .appMainArea {
+        padding: 14px;
+    }
+
+    .appBottomNav {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        padding: 8px;
+        gap: 6px;
+    }
+}

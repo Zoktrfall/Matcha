@@ -1,0 +1,284 @@
+.appPageContent {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 22px;
+}
+
+.appHomeLayout .appFeed,
+.appRightRail,
+.appComposerCard,
+.appFeedCard,
+.appRightRailCard,
+.appStatCard {
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+}
+
+.appFeed {
+    border-radius: 28px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.appFeed.solo {
+    grid-column: 1 / -1;
+}
+
+.appFeedHero,
+.appComposerCard,
+.appFeedCard,
+.appRightRailCard {
+    border-radius: 22px;
+}
+
+.appFeedHero {
+    padding: 0 0 4px;
+    display: grid;
+    gap: 18px;
+}
+
+.appEyebrow,
+.appComposerLabel,
+.appCardEyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+}
+
+.appFeedTitle {
+    margin: 10px 0 0;
+    font-size: clamp(32px, 4vw, 48px);
+    line-height: 0.98;
+}
+
+.appFeedSubtitle {
+    max-width: 680px;
+    margin: 14px 0 0;
+    color: rgba(255,255,255,0.68);
+    line-height: 1.55;
+}
+
+.appStatGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.appStatCard {
+    border-radius: 18px;
+    padding: 16px;
+}
+
+.appStatValue {
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.appStatLabel {
+    margin-top: 8px;
+    color: rgba(255,255,255,0.58);
+    font-size: 13px;
+}
+
+.appComposerCard {
+    padding: 18px;
+}
+
+.appComposerInput {
+    margin-top: 12px;
+    min-height: 118px;
+    padding: 18px;
+    border-radius: 18px;
+    border: 1px dashed rgba(255,255,255,0.16);
+    color: rgba(255,255,255,0.62);
+    background: rgba(9,11,18,0.36);
+    line-height: 1.55;
+}
+
+.appComposerActions {
+    margin-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.appGhostBtn,
+.appPrimaryBtn {
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.appGhostBtn {
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.82);
+}
+
+.appPrimaryBtn {
+    border: 1px solid rgba(125,108,255,0.5);
+    background: linear-gradient(180deg, rgba(125,108,255,0.98), rgba(108,92,231,0.92));
+    color: white;
+    box-shadow: 0 16px 34px rgba(108,92,231,0.24);
+}
+
+.appFeedList {
+    display: grid;
+    gap: 14px;
+}
+
+.appFeedCard {
+    border-radius: 22px;
+    padding: 20px;
+}
+
+.appFeedCard.feature {
+    background:
+        linear-gradient(135deg, rgba(125,108,255,0.18), rgba(255,255,255,0.04)),
+        rgba(255,255,255,0.04);
+}
+
+.appFeedCard.update {
+    background:
+        linear-gradient(135deg, rgba(57,199,255,0.1), rgba(255,255,255,0.04)),
+        rgba(255,255,255,0.04);
+}
+
+.appFeedCard.news {
+    background:
+        linear-gradient(135deg, rgba(255,174,77,0.1), rgba(255,255,255,0.04)),
+        rgba(255,255,255,0.04);
+}
+
+.appFeedCardTop {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.appCardTitle {
+    margin: 8px 0 0;
+    font-size: 22px;
+    line-height: 1.15;
+}
+
+.appCardMeta {
+    flex: 0 0 auto;
+    padding: 8px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.68);
+    font-size: 12px;
+}
+
+.appCardBody {
+    margin: 14px 0 0;
+    color: rgba(255,255,255,0.72);
+    line-height: 1.6;
+}
+
+.appRightRail {
+    display: grid;
+    align-content: start;
+    gap: 14px;
+    border-radius: 26px;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+.appRightRailCard {
+    padding: 18px;
+}
+
+.appRightRailCard.accent {
+    background:
+        linear-gradient(180deg, rgba(125,108,255,0.2), rgba(255,255,255,0.04)),
+        rgba(255,255,255,0.04);
+}
+
+.appRightRailTitle {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.appRightRailBody {
+    margin: 10px 0 0;
+    color: rgba(255,255,255,0.62);
+    line-height: 1.55;
+}
+
+@media (max-width: 1180px) {
+    .appPageContent {
+        grid-template-columns: 1fr;
+    }
+
+    .appRightRail {
+        display: none;
+    }
+}
+
+@media (max-width: 860px) {
+    .appPageContent {
+        gap: 16px;
+    }
+
+    .appFeedTitle {
+        font-size: clamp(28px, 10vw, 38px);
+    }
+
+    .appStatGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .appFeedSubtitle,
+    .appCardBody,
+    .appComposerInput {
+        font-size: 14px;
+    }
+
+    .appComposerActions {
+        flex-direction: column;
+    }
+
+    .appGhostBtn,
+    .appPrimaryBtn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 560px) {
+    .appFeedCard,
+    .appComposerCard,
+    .appStatCard {
+        padding: 14px;
+    }
+
+    .appFeedTitle {
+        font-size: 26px;
+        line-height: 1.05;
+    }
+
+    .appComposerInput {
+        min-height: 96px;
+        padding: 14px;
+    }
+
+    .appFeedCardTop {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .appCardTitle {
+        font-size: 19px;
+    }
+
+    .appCardMeta {
+        align-self: flex-start;
+    }
+}

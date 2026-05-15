@@ -15,35 +15,35 @@ This document explains what you must do **only the first time** you set up the p
 ## 1) Create and start SQL Server container (one time)
 ```bash
 docker run -e 'ACCEPT_EULA=Y' -e 'MSSQL_SA_PASSWORD=YourStrong!Passw1rd' \
-  -p 1433:1433 --name matcha-sql -d mcr.microsoft.com/mssql/server:2022-latest
+  -p 1433:1433 --name dream-sql -d mcr.microsoft.com/mssql/server:2022-latest
 ```
 
 ## 2) Create the database and connect
 ```bash
-docker exec -it matcha-sql /opt/mssql-tools18/bin/sqlcmd \
+docker exec -it dream-sql /opt/mssql-tools18/bin/sqlcmd \
 -S localhost -U sa -P 'YourStrong!Passw1rd' -C \
--Q "CREATE DATABASE Matcha;"
+-Q "CREATE DATABASE Dream;"
 ```
 ## 3) Run the schema script sql/001_init.sql
 Copy the script into the container
 ```bash
-docker cp ../sql/001_init.sql matcha-sql:/tmp/001_init.sql 
+docker cp ../sql/001_init.sql dream-sql:/tmp/001_init.sql 
 ```
-Execute the script against the Matcha database
+Execute the script against the Dream database
 ```bash
-docker exec -it matcha-sql /opt/mssql-tools18/bin/sqlcmd \
+docker exec -it dream-sql /opt/mssql-tools18/bin/sqlcmd \
   -S localhost -U sa -P 'YourStrong!Passw1rd' -C \
-  -d Matcha -i /tmp/001_init.sql
+  -d Dream -i /tmp/001_init.sql
 ```
 
 ## 4) Afterward, run sql/002_seed_data.sql to initialize our database
 Copy the script into the container
 ```bash
-docker cp ../sql/002_seed_data.sql matcha-sql:/tmp/002_seed_data.sql
+docker cp ../sql/002_seed_data.sql dream-sql:/tmp/002_seed_data.sql
 ```
-Execute the script against the Matcha database
+Execute the script against the Dream database
 ```bash
-docker exec -it matcha-sql /opt/mssql-tools18/bin/sqlcmd \
+docker exec -it dream-sql /opt/mssql-tools18/bin/sqlcmd \
   -S localhost -U sa -P 'YourStrong!Passw1rd' -C \
-  -d Matcha -i /tmp/002_seed_data.sql
+  -d Dream -i /tmp/002_seed_data.sql
 ```

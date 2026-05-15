@@ -1,20 +1,20 @@
 import "./AuthLayout.css";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { apiMe } from "../../lib/profileApis.js";
 
 import romanImg from "../../assets/Roman.jpg";
 import proudImg from "../../assets/Proud.jpg";
 import daringImg from "../../assets/Daring.jpg";
-import {Link} from "react-router-dom";
 
 const HERO_INDEX_KEY = "authHeroIndex";
+const AUTO_ROTATE_DIR = 1;
 
 export default function AuthLayout({
-   title = "Matcha",
+   title = "Dream",
    subtitle,
    children,
-   heroTitle = "Codding/Connecting",
+   heroTitle = "Coding/Connecting",
    images = [romanImg, proudImg, daringImg],
    defaultHeroIndex = 0,
    autoRotate = true,
@@ -22,68 +22,31 @@ export default function AuthLayout({
    guestOnly = false,
 }) {
     const nav = useNavigate();
-    const sliderRef = useRef(null);
-    const [ready, setReady] = useState(false);
-
     const [index, setIndex] = useState(() => {
-        const saved = sessionStorage.getItem(HERO_INDEX_KEY);
-        const n = saved !== null ? Number(saved) : defaultHeroIndex;
-        
-        return clamp(Number.isFinite(n) ? n : defaultHeroIndex, 0, images.length - 1);
+        return getStoredIndex(defaultHeroIndex, images.length);
     });
+    const currentIndex = clamp(index, 0, images.length - 1);
 
-    function scrollToIndex(i, behavior = "smooth") {
-        const el = sliderRef.current;
-        if (!el)
-            return;
-
+    function showIndex(i) {
         const clamped = clamp(i, 0, images.length - 1);
-        const slideWidth = el.clientWidth;
-
-        el.scrollTo({ left: clamped * slideWidth, behavior });
         setIndex(clamped);
     }
 
-    function onScroll() {
-        const el = sliderRef.current;
-        if (!el)
-            return;
-        
-        const newIndex = Math.round(el.scrollLeft / el.clientWidth);
-        setIndex(clamp(newIndex, 0, images.length - 1));
-    }
-    
-    useLayoutEffect(() => {
-        const el = sliderRef.current;
-        if(!el)
-            return;
+    useEffect(() => {
+        if (typeof window !== "undefined")
+            window.sessionStorage.setItem(HERO_INDEX_KEY, String(currentIndex));
+    }, [currentIndex]);
 
-        const clamped = clamp(index, 0, images.length - 1);
-        el.scrollLeft = clamped * el.clientWidth;
-    }, [images.length]);
-    
     useEffect(() => {
-        setReady(true);
-    }, []);
-    
-    useEffect(() => {
-        sessionStorage.setItem(HERO_INDEX_KEY, String(index));
-    }, [index]);
-    
-    useEffect(() => {
-        if(!ready)
-            return;
-        
         if(!autoRotate || images.length <= 1)
             return;
 
         const id = setInterval(() => {
-            const next = (index + 1) % images.length;
-            scrollToIndex(next, "smooth");
+            setIndex((current) => (current + AUTO_ROTATE_DIR + images.length) % images.length);
         }, rotateMs);
 
         return () => clearInterval(id);
-    }, [ready, autoRotate, rotateMs, images.length, index]);
+    }, [autoRotate, rotateMs, images.length]);
 
     useEffect(() => {
         if (!guestOnly)
@@ -113,9 +76,8 @@ export default function AuthLayout({
             <div className="authShell">
                 <section className="authHero" aria-label="Welcome panel">
                     <div
-                        className={`heroSlider ${ready ? "ready" : ""}`}
-                        ref={sliderRef}
-                        onScroll={onScroll}
+                        className="heroSlider ready"
+                        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
                     >
                         {images.map((img, i) => (
                             <div className="heroSlide" key={i}>
@@ -127,7 +89,7 @@ export default function AuthLayout({
                     <div className="heroOverlay" />
 
                     <div className="authHeroTop">
-                        <div className="authLogo">MATCHA/CODER</div>
+                        <div className="authLogo">DREAM/CODER</div>
                         <Link className="authBackLink" to="/">
                             Back to website <span aria-hidden="true">→</span>
                         </Link>
@@ -141,8 +103,8 @@ export default function AuthLayout({
                                 <button
                                     key={i}
                                     type="button"
-                                    className={`dot ${i === index ? "active" : ""}`}
-                                    onClick={() => scrollToIndex(i, "smooth")}
+                                    className={`dot ${i === currentIndex ? "active" : ""}`}
+                                    onClick={() => showIndex(i)}
                                     aria-label={`Show image ${i + 1}`}
                                 />
                             ))}
@@ -164,4 +126,15 @@ export default function AuthLayout({
 
 function clamp(n, min, max) {
     return Math.max(min, Math.min(max, n));
+}
+
+function getStoredIndex(defaultHeroIndex, imageCount) {
+    const fallback = clamp(defaultHeroIndex, 0, imageCount - 1);
+
+    if (typeof window === "undefined")
+        return fallback;
+
+    const saved = window.sessionStorage.getItem(HERO_INDEX_KEY);
+    const source = saved !== null ? Number(saved) : fallback;
+    return clamp(Number.isFinite(source) ? source : fallback, 0, imageCount - 1);
 }

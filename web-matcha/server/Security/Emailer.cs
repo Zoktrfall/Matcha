@@ -9,7 +9,7 @@ public static class Emailer
         SendAsync(
             cfg,
             toEmail,
-            subject: "Verify your Matcha account",
+            subject: "Verify your Dream account",
             body:
             $"Verify your account:\n{link}\n\n" +
             "If you didn't sign up, ignore this email."
@@ -19,7 +19,7 @@ public static class Emailer
         SendAsync(
             cfg,
             toEmail,
-            subject: "Reset your Matcha password",
+            subject: "Reset your Dream password",
             body:
             "You requested a password reset.\n\n" +
             $"Reset your password using this link:\n{link}\n\n" +
@@ -30,8 +30,8 @@ public static class Emailer
     {
         var msg = new MimeMessage();
         msg.From.Add(new MailboxAddress(
-            cfg["Smtp:FromName"] ?? "Matcha",
-            cfg["Smtp:FromEmail"] ?? "no-reply@matcha.local"
+            cfg["Smtp:FromName"] ?? "Dream",
+            cfg["Smtp:FromEmail"] ?? "no-reply@dream.local"
         ));
         msg.To.Add(MailboxAddress.Parse(toEmail));
         msg.Subject = subject;

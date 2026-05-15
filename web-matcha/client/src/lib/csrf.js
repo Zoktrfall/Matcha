@@ -1,4 +1,4 @@
-import { API_BASE, request } from "./authApis.js";
+import { API_BASE } from "./authApis.js";
 
 let csrfToken = null;
 

@@ -6,8 +6,8 @@ public static class Db
 {
     public static SqlConnection Open(IConfiguration cfg)
     {
-        var cs = cfg.GetConnectionString("Matcha")
-                 ?? throw new InvalidOperationException("Missing connection string: Matcha");
+        var cs = cfg.GetConnectionString("Dream")
+                 ?? throw new InvalidOperationException("Missing connection string: Dream");
 
         var conn = new SqlConnection(cs);
         conn.Open();

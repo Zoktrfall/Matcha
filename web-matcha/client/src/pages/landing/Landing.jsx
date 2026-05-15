@@ -1,10 +1,8 @@
 import "./Landing.css";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
 
 export default function Landing() {
     const nav = useNavigate();
-    const [email, setEmail] = useState("");
 
     function goRegister(e) {
         e.preventDefault();
@@ -16,7 +14,7 @@ export default function Landing() {
             <div className="landingShell">
                 <header className="landingTop">
                     <div className="landingBrand">
-                        <div className="landingLogo">MATCHA/CODER</div>
+                        <div className="landingLogo">DREAM/CODER</div>
                     </div>
 
                     <nav className="landingNav">
@@ -50,7 +48,7 @@ export default function Landing() {
                 </main>
 
                 <footer className="landingFooter">
-                    <span>© {new Date().getFullYear()} Matcha/Coder</span>
+                    <span>© {new Date().getFullYear()} Dream/Coder</span>
                 </footer>
             </div>
         </div>

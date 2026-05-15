@@ -25,6 +25,7 @@ export default function Register() {
     });
 
     const [showVerifyModal, setShowVerifyModal] = useState(false);
+    const [verifyModalText, setVerifyModalText] = useState("");
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
@@ -51,6 +52,7 @@ export default function Register() {
             agree: "",
             form: "",
         });
+        setVerifyModalText("");
     }
 
     async function onSubmit(e) {
@@ -116,7 +118,12 @@ export default function Register() {
                 form: "",
             });
 
-            await apiRegister(form);
+            const data = await apiRegister(form);
+            setVerifyModalText(
+                data?.emailSent === false
+                    ? "Your account was created, but the verification email could not be delivered right now. Open the verification page later to resend it."
+                    : `We sent a verification link to ${form.email}. Open it to activate your account.`
+            );
             setShowVerifyModal(true);
         } catch (err) {
             setErrors((prev) => ({
@@ -255,11 +262,7 @@ export default function Register() {
                     <div className="modalCard" onClick={(e) => e.stopPropagation()}>
                         <div className="modalTitle">Check your email</div>
 
-                        <div className="modalText">
-                            We sent a verification link to <b>{form.email}</b>.
-                            <br />
-                            Open it to activate your account.
-                        </div>
+                        <div className="modalText">{verifyModalText}</div>
 
                         <div className="modalActions">
                             <Link className="mutedLink" to="/login">

@@ -23,7 +23,7 @@ export default function VerifyEmail() {
             try {
                 await apiVerifyEmail(token);
                 setState({ loading: false, ok: true, message: "Your email is verified! You can log in now." });
-            } catch (e) {
+            } catch {
                 setState({ loading: false, ok: false, message: "Something wrong with your Link Coder!" });
             }
         })();
@@ -42,7 +42,7 @@ export default function VerifyEmail() {
             setResendLoading(true);
             await apiResendVerification(email);
             setResendMsg("If that account exists and isn’t verified, we sent a new link. Check your email.");
-        } catch (e) {
+        } catch {
             setResendMsg("If that account exists and isn’t verified, we sent a new link. Check your email.");
         } finally {
             setResendLoading(false);

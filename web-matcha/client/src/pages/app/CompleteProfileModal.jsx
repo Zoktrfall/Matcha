@@ -1,5 +1,5 @@
 import "./CompleteProfileModal.css";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
     apiAttachTags,
     apiDeletePhoto,
@@ -9,6 +9,7 @@ import {
     apiUpdateProfile,
     apiUploadPhoto,
 } from "../../lib/profileApis.js";
+import { API_BASE } from "../../lib/authApis.js";
 
 function normalizeTag(s) {
     const t = (s || "").trim();
@@ -33,8 +34,8 @@ export default function CompleteProfileModal({ me, onRefresh, onFinish }) {
     const [loadingSuggestions, setLoadingSuggestions] = useState(false);
     const [busy, setBusy] = useState(false);
     const [msg, setMsg] = useState("");
-    const tags = me?.tags ?? [];
-    const photos = me?.photos ?? [];
+    const tags = useMemo(() => me?.tags ?? [], [me]);
+    const photos = useMemo(() => me?.photos ?? [], [me]);
     
     useEffect(() => {
         setForm({
@@ -203,7 +204,6 @@ export default function CompleteProfileModal({ me, onRefresh, onFinish }) {
         setStep(3);
     }
 
-    const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5201";
     function photoSrc(url) {
         if (!url) return "";
         return url.startsWith("http") ? url : `${API_BASE}${url}`;
@@ -266,7 +266,7 @@ export default function CompleteProfileModal({ me, onRefresh, onFinish }) {
                     className="cpInput cpTextarea"
                     value={form.bio}
                     onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
-                    placeholder="Tell something about you… (min 10 chars)"
+                    placeholder="Tell something about you…"
                 />
                             </Field>
 

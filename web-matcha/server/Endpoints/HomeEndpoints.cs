@@ -8,7 +8,7 @@ public static class HomeEndpoints
         <head>
           <meta charset=""utf-8"" />
           <meta name=""viewport"" content=""width=device-width, initial-scale=1"" />
-          <title>Matcha Backend</title>
+          <title>Dream Backend</title>
           <style>
             :root { --bg: #0e0f14; }
             html, body { height: 100%; margin: 0; }
@@ -53,7 +53,7 @@ public static class HomeEndpoints
         </head>
         <body>
           <div class=""card"">
-            <div class=""logo"">MATCHA/CODER</div>
+            <div class=""logo"">DREAM/CODER</div>
             <h1>Backend is working ✅</h1>
           </div>
         </body>

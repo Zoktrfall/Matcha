@@ -222,23 +222,17 @@
     position: absolute;
     inset: 0;
     display: flex;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-
-    scroll-behavior: auto;
-    scrollbar-width: none;
+    will-change: transform;
 }
-.heroSlider::-webkit-scrollbar { display: none; }
 
 .heroSlider.ready {
-    scroll-behavior: smooth;
+    transition: transform 420ms ease;
 }
 
 .heroSlide {
     flex: 0 0 100%;
+    min-width: 100%;
     height: 100%;
-    scroll-snap-align: start;
 }
 
 .heroImg {

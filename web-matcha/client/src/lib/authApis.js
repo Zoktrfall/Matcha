@@ -1,6 +1,6 @@
 import { resetCsrfToken } from "./csrf.js";
 
-export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000";
+export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5201";
 
 export async function request(path, options = {}) {
     const res = await fetch(`${API_BASE}${path}`, {
@@ -74,6 +74,35 @@ export async function apiLogin(payload) {
         method: "POST",
         body: JSON.stringify(payload),
     });
+
+    resetCsrfToken();
+    return data;
+}
+
+export async function apiLogout() {
+    const csrfRes = await fetch(`${API_BASE}/api/csrf`, { credentials: "include" });
+    const csrfData = await csrfRes.json();
+
+    const res = await fetch(`${API_BASE}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": csrfData.token,
+        },
+    });
+
+    const text = await res.text();
+    let data = null;
+    try {
+        data = text ? JSON.parse(text) : null;
+    } catch {
+        data = { message: text };
+    }
+
+    if (!res.ok) {
+        throw new Error(data?.message || `Request failed (${res.status})`);
+    }
 
     resetCsrfToken();
     return data;

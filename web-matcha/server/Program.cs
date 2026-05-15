@@ -49,7 +49,7 @@ builder.Services
         {
             OnMessageReceived = ctx =>
             {
-                if (ctx.Request.Cookies.TryGetValue("matcha_jwt", out var token))
+                if (ctx.Request.Cookies.TryGetValue("dream_jwt", out var token))
                     ctx.Token = token;
 
                 return Task.CompletedTask;

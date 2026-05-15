@@ -19,6 +19,7 @@ public static class AuthEndpoints
         app.MapPost("/api/auth/forgot-password", ForgotPassword);
         app.MapPost("/api/auth/reset-password", ResetPassword);
         app.MapPost("/api/auth/login", Login);
+        app.MapPost("/api/auth/logout", Logout);
         return app;
     }
 
@@ -78,53 +79,73 @@ public static class AuthEndpoints
                 return Results.Conflict(new { message = "Username is already taken." });
         }
         
-        Guid userId;
-        await using (var insertUser = new SqlCommand(@"
-            INSERT INTO dbo.Users (Email, PasswordHash)
-            OUTPUT INSERTED.Id
-            VALUES (@email, @hash);
-        ", conn))
-        {
-            insertUser.Parameters.Add("@email", SqlDbType.NVarChar, 255).Value = email;
-            insertUser.Parameters.Add("@hash", SqlDbType.NVarChar, 255).Value = passwordHash;
-
-            userId = (Guid)(await insertUser.ExecuteScalarAsync()
-                     ?? throw new Exception("Failed to insert user."));
-        }
-        
-        await using (var insertProfile = new SqlCommand(@"
-            INSERT INTO dbo.Profiles (UserId, Username, FirstName, LastName, Bio, Gender, Preference)
-            VALUES (@uid, @username, @first, @last, NULL, NULL, NULL);
-        ", conn))
-        {
-            insertProfile.Parameters.Add("@uid", SqlDbType.UniqueIdentifier).Value = userId;
-            insertProfile.Parameters.Add("@username", SqlDbType.NVarChar, 50).Value = username;
-            insertProfile.Parameters.Add("@first", SqlDbType.NVarChar, 50).Value = first;
-            insertProfile.Parameters.Add("@last", SqlDbType.NVarChar, 50).Value = last;
-            await insertProfile.ExecuteNonQueryAsync();
-        }
-        
         var token = TokenUtil.GenerateToken();
         var tokenHash = TokenUtil.Sha256(token);
         var expires = DateTime.UtcNow.AddHours(24);
 
-        await using (var insertTok = new SqlCommand(@"
-            INSERT INTO dbo.EmailVerificationTokens (UserId, TokenHash, ExpiresAt)
-            VALUES (@uid, @hash, @exp);
-        ", conn))
+        Guid userId;
+        await using var tx = await conn.BeginTransactionAsync();
+
+        try
         {
-            insertTok.Parameters.Add("@uid", SqlDbType.UniqueIdentifier).Value = userId;
-            insertTok.Parameters.Add("@hash", SqlDbType.VarBinary, 32).Value = tokenHash;
-            insertTok.Parameters.Add("@exp", SqlDbType.DateTime2).Value = expires;
-            await insertTok.ExecuteNonQueryAsync();
+            await using (var insertUser = new SqlCommand(@"
+                INSERT INTO dbo.Users (Email, PasswordHash)
+                OUTPUT INSERTED.Id
+                VALUES (@email, @hash);
+            ", conn, (SqlTransaction)tx))
+            {
+                insertUser.Parameters.Add("@email", SqlDbType.NVarChar, 255).Value = email;
+                insertUser.Parameters.Add("@hash", SqlDbType.NVarChar, 255).Value = passwordHash;
+
+                userId = (Guid)(await insertUser.ExecuteScalarAsync()
+                         ?? throw new Exception("Failed to insert user."));
+            }
+
+            await using (var insertProfile = new SqlCommand(@"
+                INSERT INTO dbo.Profiles (UserId, Username, FirstName, LastName, Bio, Gender, Preference)
+                VALUES (@uid, @username, @first, @last, NULL, NULL, NULL);
+            ", conn, (SqlTransaction)tx))
+            {
+                insertProfile.Parameters.Add("@uid", SqlDbType.UniqueIdentifier).Value = userId;
+                insertProfile.Parameters.Add("@username", SqlDbType.NVarChar, 50).Value = username;
+                insertProfile.Parameters.Add("@first", SqlDbType.NVarChar, 50).Value = first;
+                insertProfile.Parameters.Add("@last", SqlDbType.NVarChar, 50).Value = last;
+                await insertProfile.ExecuteNonQueryAsync();
+            }
+
+            await using (var insertTok = new SqlCommand(@"
+                INSERT INTO dbo.EmailVerificationTokens (UserId, TokenHash, ExpiresAt)
+                VALUES (@uid, @hash, @exp);
+            ", conn, (SqlTransaction)tx))
+            {
+                insertTok.Parameters.Add("@uid", SqlDbType.UniqueIdentifier).Value = userId;
+                insertTok.Parameters.Add("@hash", SqlDbType.VarBinary, 32).Value = tokenHash;
+                insertTok.Parameters.Add("@exp", SqlDbType.DateTime2).Value = expires;
+                await insertTok.ExecuteNonQueryAsync();
+            }
+
+            await tx.CommitAsync();
+        }
+        catch (SqlException ex) when (IsUniqueViolation(ex))
+        {
+            await tx.RollbackAsync();
+            return Results.Conflict(new { message = GetDuplicateMessage(ex) });
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
         }
 
         var publicBase = cfg["App:PublicBaseUrl"] ?? "http://localhost:5173";
         var link = $"{publicBase}/verify-email?token={Uri.EscapeDataString(token)}";
 
-        await Emailer.SendVerificationAsync(cfg, email, link);
+        var emailSent = await TrySendEmailAsync(
+            () => Emailer.SendVerificationAsync(cfg, email, link),
+            "verification",
+            email);
 
-        return Results.Ok(new { ok = true });
+        return Results.Ok(new { ok = true, emailSent });
     }
 
     private static async Task<IResult> VerifyEmail([FromBody] VerifyEmailRequest req, IConfiguration cfg)
@@ -238,7 +259,10 @@ public static class AuthEndpoints
         
         var publicBase = cfg["App:PublicBaseUrl"] ?? "http://localhost:5173";
         var link = $"{publicBase}/verify-email?token={Uri.EscapeDataString(token)}";
-        await Emailer.SendVerificationAsync(cfg, email, link);
+        await TrySendEmailAsync(
+            () => Emailer.SendVerificationAsync(cfg, email, link),
+            "verification resend",
+            email);
 
         return genericOk;
     }
@@ -284,7 +308,10 @@ public static class AuthEndpoints
         var publicBase = cfg["App:PublicBaseUrl"] ?? "http://localhost:5173";
         var link = $"{publicBase}/reset-password?token={Uri.EscapeDataString(token)}";
 
-        await Emailer.SendPasswordResetAsync(cfg, email, link);
+        await TrySendEmailAsync(
+            () => Emailer.SendPasswordResetAsync(cfg, email, link),
+            "password reset",
+            email);
         return ok;
     }
     
@@ -410,14 +437,15 @@ public static class AuthEndpoints
         var lifetime = TimeSpan.FromDays(jwtDays);
         var expires = DateTime.UtcNow.Add(lifetime);
         var jwt = JwtToken.Create(userId, jwtIssuer, jwtAudience, jwtKey, lifetime);
+        var secureCookies = response.HttpContext.Request.IsHttps;
 
         response.Cookies.Append(
-            "matcha_jwt",
+            "dream_jwt",
             jwt,
             new CookieOptions
             {
                 HttpOnly = true,
-                Secure = false,
+                Secure = secureCookies,
                 SameSite = SameSiteMode.Lax,
                 Expires = expires,
                 Path = "/"
@@ -427,4 +455,50 @@ public static class AuthEndpoints
         return Results.Ok(new { ok = true });
     }
 
+    private static IResult Logout(HttpResponse response)
+    {
+        var secureCookies = response.HttpContext.Request.IsHttps;
+        response.Cookies.Delete(
+            "dream_jwt",
+            new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = secureCookies,
+                SameSite = SameSiteMode.Lax,
+                Path = "/"
+            }
+        );
+
+        return Results.Ok(new { ok = true });
+    }
+
+    private static bool IsUniqueViolation(SqlException ex) => ex.Number is 2601 or 2627;
+
+    private static string GetDuplicateMessage(SqlException ex)
+    {
+        if (ex.Message.Contains("UQ_Users_Email", StringComparison.OrdinalIgnoreCase))
+            return "Email is already registered.";
+
+        if (ex.Message.Contains("UQ_Profiles_UserName", StringComparison.OrdinalIgnoreCase))
+            return "Username is already taken.";
+
+        return "An account with these details already exists.";
+    }
+
+    private static async Task<bool> TrySendEmailAsync(
+        Func<Task> sendEmail,
+        string purpose,
+        string email)
+    {
+        try
+        {
+            await sendEmail();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Failed to send {purpose} email to {email}: {ex}");
+            return false;
+        }
+    }
 }
